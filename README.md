@@ -94,7 +94,10 @@ Beyond the core lifecycle, Chipd now includes:
 ---
 
 ## Status & known follow-ups
-- ✅ Builds clean: iOS + Android Metro bundles (2,500+ modules), `tsc` 0 errors, **57 Cloud Functions** load in the emulator, **41/41 shared tests** pass. 65 screens, 42 domain components.
+- ✅ Builds clean: iOS + Android Metro bundles (2,500+ modules), `tsc` 0 errors, **57 Cloud Functions** load in the emulator, **41/41 app tests** + **63/63 backend integrity tests** pass. 65 screens, 42 domain components.
+- 🔒 **Integrity test suite** (`cd functions && npm run test:rules`): Firestore-rules tests prove clients can't write money/ledger/settlement; a real emulator-backed double-spend test proves concurrent `placeBet` can't overspend; money-conservation property tests over thousands of random books.
+- 🤖 **CI** (`.github/workflows/ci.yml`): typecheck + tests + Metro bundle (iOS/Android) + functions build + rules tests + a **compliance gate** that fails the build if a real-money/cash-out path appears or `IS_REAL_MONEY` isn't `false`.
+- ⚙️ Runtime wiring live: push registration + deep-link tap routing, the responsible-gaming reality check fires on a session tick, missions seed on app open, template/rematch prefill flows into the create wizard, win celebrations share a card, notification read-state persists.
 - ⚠️ **Phone auth** UI is complete but the JS SDK needs a reCAPTCHA verifier on RN — it currently falls back to email. Wire real phone auth when moving to react-native-firebase.
 - ⚠️ **Google/Apple sign-in** buttons are present but show "coming soon"; wire `expo-auth-session` / native providers.
 - ⚠️ **Push delivery**: device tokens are registered and notification docs are written, but actually sending FCM pushes to those tokens is a follow-up.

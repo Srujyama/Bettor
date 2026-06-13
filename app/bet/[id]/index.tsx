@@ -10,6 +10,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import * as Clipboard from 'expo-clipboard';
+import * as Haptics from 'expo-haptics';
 import { toast } from 'burnt';
 import { formatDistanceToNowStrict } from 'date-fns';
 import {
@@ -23,7 +24,7 @@ import {
   Screen,
   Txt,
 } from '@/components/ui';
-import { PoolMeter } from '@/components/domain';
+import { PoolMeter, ReactionBar, type Reaction } from '@/components/domain';
 import { usePostComment } from '@/features/bets/mutations';
 import {
   useBet,
@@ -68,6 +69,23 @@ export default function BetDetailScreen() {
 
   const [commentText, setCommentText] = useState('');
   const celebratedRef = useRef(false);
+
+  // Local-optimistic comment reactions. There is no reaction callable yet
+  // (none exists in fns/*), so these live in component state only: the chosen
+  // emoji per comment and its local count. They reset on reload — fine for the
+  // pilot; swap to a callable + live read when one ships.
+  const [reactions, setReactions] = useState<Record<string, Reaction>>({});
+
+  const reactToComment = (commentId: string, emoji: Reaction) => {
+    setReactions((prev) =>
+      prev[commentId] === emoji
+        ? (() => {
+            const { [commentId]: _drop, ...rest } = prev;
+            return rest;
+          })()
+        : { ...prev, [commentId]: emoji },
+    );
+  };
 
   const myEntry = useMemo(
     () => (entries ?? []).find((e) => e.uid === myUid) ?? null,
@@ -199,7 +217,13 @@ export default function BetDetailScreen() {
             <Txt variant="label" dim className="uppercase tracking-widest">
               The sides
             </Txt>
-            <Pressable onPress={() => router.push(`/bet/${bet.betId}/participants`)} hitSlop={8}>
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push(`/bet/${bet.betId}/participants`);
+              }}
+              hitSlop={8}
+            >
               <Txt variant="caption" className="text-jade">
                 All participants ›
               </Txt>
@@ -256,7 +280,14 @@ export default function BetDetailScreen() {
               No comments yet. Start the trash talk.
             </Txt>
           ) : (
-            (comments ?? []).map((c) => <CommentRow key={c.commentId} comment={c} />)
+            (comments ?? []).map((c) => (
+              <CommentRow
+                key={c.commentId}
+                comment={c}
+                mine={reactions[c.commentId] ?? null}
+                onReact={(emoji) => reactToComment(c.commentId, emoji)}
+              />
+            ))
           )}
 
           <View className="flex-row items-end gap-2">
@@ -420,20 +451,37 @@ function MyPosition({
   );
 }
 
-function CommentRow({ comment }: { comment: Comment }) {
+function CommentRow({
+  comment,
+  mine,
+  onReact,
+}: {
+  comment: Comment;
+  mine: Reaction | null;
+  onReact: (emoji: Reaction) => void;
+}) {
+  // Local-optimistic counts: the viewer's own reaction shows a single tally.
+  const counts = useMemo<Partial<Record<string, number>>>(
+    () => (mine ? { [mine]: 1 } : {}),
+    [mine],
+  );
+
   return (
     <View className="flex-row gap-3 py-1.5">
       <Avatar uri={comment.authorPhotoURL} name={comment.authorName} size={32} />
-      <View className="flex-1">
-        <View className="flex-row items-center gap-2">
-          <Txt variant="label" numberOfLines={1}>
-            {comment.authorName}
-          </Txt>
-          <Txt variant="caption" muted>
-            {formatDistanceToNowStrict(new Date(comment.createdAt), { addSuffix: true })}
-          </Txt>
+      <View className="flex-1 gap-2">
+        <View>
+          <View className="flex-row items-center gap-2">
+            <Txt variant="label" numberOfLines={1}>
+              {comment.authorName}
+            </Txt>
+            <Txt variant="caption" muted>
+              {formatDistanceToNowStrict(new Date(comment.createdAt), { addSuffix: true })}
+            </Txt>
+          </View>
+          <Txt variant="body">{comment.text}</Txt>
         </View>
-        <Txt variant="body">{comment.text}</Txt>
+        <ReactionBar counts={counts} mine={mine} onReact={onReact} />
       </View>
     </View>
   );

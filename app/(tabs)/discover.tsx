@@ -4,9 +4,10 @@
  * card deep-links to the bet detail.
  */
 import { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { EmptyState, Input, Screen, Txt } from '@/components/ui';
 import { BetCard, SegmentedTabs } from '@/components/domain';
 import { useDiscoverBets } from '@/hooks/data';
@@ -44,10 +45,26 @@ export default function DiscoverScreen() {
 
   const openBet = (betId: string) => router.push(`/bet/${betId}`);
 
+  const openSearch = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/(modals)/search');
+  };
+
   return (
     <Screen>
       <View className="gap-4 px-4 pt-2">
-        <Txt variant="title">Discover</Txt>
+        <View className="flex-row items-center justify-between">
+          <Txt variant="title">Discover</Txt>
+          <Pressable
+            onPress={openSearch}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel="Search"
+            className="h-10 w-10 items-center justify-center rounded-full bg-surface-raised"
+          >
+            <Txt style={{ fontSize: 18 }}>🔍</Txt>
+          </Pressable>
+        </View>
         <Input
           placeholder="Search bets, people, tags…"
           value={search}

@@ -44,6 +44,7 @@ export { ReferralBlock, referralLink, referralMessage } from './ReferralBlock';
 export { ProfileFlair } from './ProfileFlair';
 export { ReactionBar, REACTIONS } from './ReactionBar';
 export type { Reaction } from './ReactionBar';
+export { SearchResultRow } from './SearchResultRow';
 
 // ── Bet formats: parlays / squares / brackets / templates (Formats track) ──
 export { ParlaySlipCard } from './ParlaySlipCard';

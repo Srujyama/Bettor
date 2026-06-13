@@ -16,7 +16,7 @@ import '../global.css';
 
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import { Redirect, Stack, SplashScreen } from 'expo-router';
+import { Redirect, Stack, SplashScreen, router } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -29,6 +29,7 @@ import { authService, subscribeDoc, paths } from '@/lib/firebase';
 import { useSession, isOnboarded } from '@/stores/session';
 import { useOnboarding } from '@/stores/ui';
 import { WinCelebration } from '@/components/domain';
+import { AppServices } from '@/components/AppServices';
 import { ChipCounter, Txt } from '@/components/ui';
 import { colors } from '@/theme';
 import { ECONOMY } from '@/shared/constants';
@@ -49,7 +50,12 @@ export default function RootLayout() {
           <BottomSheetModalProvider>
             <StatusBar style="light" />
             <AuthGate fontsReady={fontsReady} />
-            <WinCelebration />
+            <AppServices />
+            <WinCelebration
+              onShare={(betId) =>
+                router.push(`/(modals)/share-card?type=bet_result&id=${betId}` as never)
+              }
+            />
           </BottomSheetModalProvider>
         </PersistQueryClientProvider>
       </SafeAreaProvider>

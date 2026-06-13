@@ -7,8 +7,9 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { Avatar, Button, Card, Input, Pill, Screen, Txt } from '@/components/ui';
-import { LevelRing, StatBadge } from '@/components/domain';
+import * as Haptics from 'expo-haptics';
+import { Button, Card, Input, Pill, Screen, Txt } from '@/components/ui';
+import { LevelRing, ProfileFlair, StatBadge } from '@/components/domain';
 import { colors } from '@/theme';
 import { paths } from '@/lib/firebase/paths';
 import { useCollectionQuery } from '@/hooks/useFirestoreQuery';
@@ -18,6 +19,20 @@ import { useUpdateProfile } from '@/features/social/hooks';
 import { formatChips, formatChipsCompact } from '@/shared/money';
 import { orderBy } from 'firebase/firestore';
 import type { Achievement, Group, User } from '@/shared/schemas';
+import type { EquippedCosmetics } from '@/shared/schemas-ext';
+
+/** Expansion denorm fields written onto the user doc by the economy CFs. */
+type CosmeticUserView = User & {
+  equipped?: EquippedCosmetics | null;
+  pro?: { active?: boolean; expiresAt?: number | null } | null;
+};
+
+/** Whether the user currently holds an active Pro subscription. */
+function isProActive(user: CosmeticUserView): boolean {
+  const pro = user.pro;
+  if (!pro?.active) return false;
+  return pro.expiresAt == null || pro.expiresAt > Date.now();
+}
 
 function useAchievements() {
   const uid = useSession((s) => s.uid);
@@ -102,7 +117,13 @@ export default function ProfileScreen() {
         />
 
         {/* Crews */}
-        <CrewList groups={myGroups} onPress={(id) => router.push(`/group/${id}`)} />
+        <CrewList
+          groups={myGroups}
+          onPress={(id) => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.push(`/group/${id}`);
+          }}
+        />
 
         {/* Lifetime detail */}
         <Card className="gap-2">
@@ -158,9 +179,17 @@ function ProfileHeader({ user }: { user: User }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user.displayName);
 
+  const cosmeticUser = user as CosmeticUserView;
+
   return (
     <Card raised className="items-center gap-3 py-6">
-      <Avatar uri={user.photoURL} name={user.displayName} size={88} ring />
+      <ProfileFlair
+        uri={user.photoURL}
+        name={user.displayName}
+        size={88}
+        equipped={cosmeticUser.equipped}
+        pro={isProActive(cosmeticUser)}
+      />
       {editing ? (
         <View className="w-full gap-2 px-4">
           <Input

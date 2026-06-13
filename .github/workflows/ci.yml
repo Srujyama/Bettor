@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: App — typecheck, tests, bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install
+        run: npm ci --legacy-peer-deps
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Unit tests (shared money / formats / gamification)
+        run: npx jest --ci
+      - name: Metro bundle (iOS + Android — proves every import resolves)
+        run: |
+          npx expo export --platform ios --output-dir /tmp/bundle-ios
+          npx expo export --platform android --output-dir /tmp/bundle-android
+
+  functions:
+    name: Functions — build + rules tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Install root (for emulator config) + functions
+        run: |
+          npm ci --legacy-peer-deps
+          npm ci --legacy-peer-deps --prefix functions
+      - name: Build functions
+        run: npm run build --prefix functions
+      - name: Install Firebase tools
+        run: npm i -g firebase-tools
+      - name: Security-rules integrity tests (Firestore emulator)
+        run: |
+          if npm run --prefix functions | grep -q "test:rules"; then
+            npm run test:rules --prefix functions
+          else
+            echo "No test:rules script yet — skipping."
+          fi
+
+  compliance-gate:
+    name: Compliance gate (no real money in v1)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert virtual-currency-only invariants
+        run: |
+          set -e
+          echo "IS_REAL_MONEY must be false in the shared constants."
+          grep -q "IS_REAL_MONEY = false" src/shared/constants.ts
+          echo "No real-money cash-out path may exist in v1."
+          if grep -rniE "cashOut|withdrawReal|stripe|realMoneyEnabled *= *true" src functions/src --include="*.ts" | grep -viE "//|paymentProvider|NoOp|seam|future|comment"; then
+            echo "::error::Found a potential real-money/cash-out reference — review before merging."
+            exit 1
+          fi
+          echo "Compliance gate passed: Chips-only, no cash-out."

@@ -8,12 +8,26 @@ import { useMemo } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { Avatar, Button, Card, Pill, Screen, Txt } from '@/components/ui';
-import { StatBadge } from '@/components/domain';
+import { ProfileFlair, StatBadge } from '@/components/domain';
 import { colors } from '@/theme';
 import { useCurrentUser, useFriends, useUser } from '@/hooks/data';
 import { useSendFriendRequest, useRespondFriendRequest } from '@/features/social/hooks';
 import { formatChips, formatChipsCompact } from '@/shared/money';
-import type { Friend } from '@/shared/schemas';
+import type { Friend, User } from '@/shared/schemas';
+import type { EquippedCosmetics } from '@/shared/schemas-ext';
+
+/** Expansion denorm fields written onto the user doc by the economy CFs. */
+type CosmeticUserView = User & {
+  equipped?: EquippedCosmetics | null;
+  pro?: { active?: boolean; expiresAt?: number | null } | null;
+};
+
+/** Whether the user currently holds an active Pro subscription. */
+function isProActive(user: CosmeticUserView): boolean {
+  const pro = user.pro;
+  if (!pro?.active) return false;
+  return pro.expiresAt == null || pro.expiresAt > Date.now();
+}
 
 export default function UserProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -55,7 +69,13 @@ export default function UserProfileScreen() {
         ) : (
           <>
             <Card raised className="items-center gap-3 py-6">
-              <Avatar uri={user.photoURL} name={user.displayName} size={88} ring />
+              <ProfileFlair
+                uri={user.photoURL}
+                name={user.displayName}
+                size={88}
+                equipped={(user as CosmeticUserView).equipped}
+                pro={isProActive(user as CosmeticUserView)}
+              />
               <View className="items-center gap-1">
                 <Txt variant="title" className="text-center">
                   {user.displayName}

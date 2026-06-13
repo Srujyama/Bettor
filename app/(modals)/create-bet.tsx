@@ -12,7 +12,7 @@
  */
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { formatInTimeZone } from 'date-fns-tz';
@@ -74,23 +74,44 @@ interface OutcomeDraft {
 export default function CreateBetModal() {
   const createBet = useCreateBet();
 
+  // Prefill from a template or rematch (see src/features/formats/templates.ts).
+  // Params are flat strings; `outcomes` is a "|"-joined list of labels.
+  const params = useLocalSearchParams<{
+    title?: string;
+    description?: string;
+    category?: string;
+    type?: string;
+    outcomes?: string;
+  }>();
+  const prefillOutcomes = useMemo(
+    () => (params.outcomes ? String(params.outcomes).split('|').filter(Boolean) : []),
+    [params.outcomes],
+  );
+  const prefillType = (params.type as BetType) || BET_TYPE.BINARY;
+
   const [step, setStep] = useState(0);
 
   // Step 1 — basics
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<BetCategory>(BET_CATEGORY.SOCIAL);
+  const [title, setTitle] = useState(params.title ? String(params.title) : '');
+  const [description, setDescription] = useState(params.description ? String(params.description) : '');
+  const [category, setCategory] = useState<BetCategory>(
+    (params.category as BetCategory) || BET_CATEGORY.SOCIAL,
+  );
   const [mediaUri, setMediaUri] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   // Step 2 — type + outcomes
-  const [type, setType] = useState<BetType>(BET_TYPE.BINARY);
-  const [sideA, setSideA] = useState(''); // head-to-head
-  const [sideB, setSideB] = useState('');
-  const [multiOutcomes, setMultiOutcomes] = useState<OutcomeDraft[]>([
-    { key: makeId('o'), label: '' },
-    { key: makeId('o'), label: '' },
-  ]);
+  const [type, setType] = useState<BetType>(prefillType);
+  const [sideA, setSideA] = useState(prefillOutcomes[0] ?? ''); // head-to-head
+  const [sideB, setSideB] = useState(prefillOutcomes[1] ?? '');
+  const [multiOutcomes, setMultiOutcomes] = useState<OutcomeDraft[]>(
+    prefillOutcomes.length >= 2
+      ? prefillOutcomes.map((label) => ({ key: makeId('o'), label }))
+      : [
+          { key: makeId('o'), label: '' },
+          { key: makeId('o'), label: '' },
+        ],
+  );
   const [ouLine, setOuLine] = useState(''); // over-under numeric line
   const [ouMetric, setOuMetric] = useState(''); // what's being measured
 

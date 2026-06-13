@@ -1,9 +1,9 @@
 /**
  * ACTIVITY tab — the user's notifications. Rows render via ActivityRow's generic
  * shape; tapping deep-links to the referenced bet (or an explicit deepLink).
- * Notifications are marked read in the local cache when the list is viewed so the
- * unread dots clear — the authoritative read flag is owned by a Cloud Function
- * (no client write to it from here, per the firebase boundary).
+ * Notifications are marked read both in the local cache (instant) and persisted
+ * via the firebase boundary — the security rules permit a user to patch ONLY the
+ * `read` field on their own notification docs, so this is not a money write.
  */
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -14,6 +14,7 @@ import { EmptyState, Screen, Txt } from '@/components/ui';
 import { ActivityRow } from '@/components/domain';
 import { useNotifications } from '@/hooks/data';
 import { useSession } from '@/stores/session';
+import { updateDocData, paths } from '@/lib/firebase';
 import type { AppNotification } from '@/shared/schemas';
 
 function notificationEmoji(type: string): string {
@@ -33,16 +34,23 @@ export default function ActivityScreen() {
 
   const hasUnread = (notifications ?? []).some((n) => !n.read);
 
-  // Mark everything read in the local cache once viewed.
+  // Mark everything read once viewed — optimistic cache update + persist the
+  // `read` flag for each unread notification (rules allow only this field).
   useEffect(() => {
-    if (!hasUnread) return;
+    if (!hasUnread || !uid) return;
+    const unread = (notifications ?? []).filter((n) => !n.read);
     const id = setTimeout(() => {
       qc.setQueryData<AppNotification[]>(['notifications', uid, 50], (prev) =>
         (prev ?? []).map((n) => (n.read ? n : { ...n, read: true })),
       );
+      for (const n of unread) {
+        updateDocData(`${paths.notifications(uid)}/${n.notifId}`, { read: true }).catch(
+          () => undefined,
+        );
+      }
     }, 800);
     return () => clearTimeout(id);
-  }, [hasUnread, qc, uid]);
+  }, [hasUnread, qc, uid, notifications]);
 
   const open = (n: AppNotification) => {
     if (n.deepLink) {
