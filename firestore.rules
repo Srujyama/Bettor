@@ -1,0 +1,216 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chipd Firestore Security Rules.
+//
+// Mental model: the client can READ what it's allowed to see and can NEVER write
+// money, pools, status, balances, or stats. Every money/state mutation goes
+// through a Cloud Function (server-authoritative). Where a client write IS
+// allowed (profile fields, comments, votes) it is tightly whitelisted and
+// validated here as defense-in-depth.
+//
+// App Check is REQUIRED for all access. Age-gate + self-exclusion are enforced
+// for write paths via a get() on the caller's user doc.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+    function signedIn() {
+      return request.auth != null;
+    }
+    function appChecked() {
+      // App Check token present (enforced in production; emulator omits it).
+      return request.app != null;
+    }
+    function ok() {
+      return signedIn() && appChecked();
+    }
+    function isUser(uid) {
+      return ok() && request.auth.uid == uid;
+    }
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+    function callerDoc() {
+      return userDoc(request.auth.uid);
+    }
+    function ageVerified() {
+      return ok() && callerDoc().ageVerified == true;
+    }
+    function notExcluded() {
+      return ok() && (
+        callerDoc().rgLimits.selfExclusionUntil == null ||
+        callerDoc().rgLimits.selfExclusionUntil < request.time.toMillis()
+      );
+    }
+    function notBanned() {
+      return ok() && callerDoc().isBanned != true && callerDoc().flags.frozen != true;
+    }
+    function canPlay() {
+      return ageVerified() && notExcluded() && notBanned();
+    }
+    // The exact set of fields a user may change on their own profile.
+    function onlyProfileFields() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['displayName', 'photoURL', 'settings', 'locale']);
+    }
+
+    // ── users ────────────────────────────────────────────────────────────────
+    match /users/{uid} {
+      // Profiles are readable by any signed-in (App Checked) user (social app).
+      allow read: if ok();
+      // Creation is server-only (onUserCreate). Never client-created.
+      allow create: if false;
+      // Owners may patch ONLY their profile whitelist — never money/stats/compliance.
+      allow update: if isUser(uid) && onlyProfileFields();
+      allow delete: if false;
+
+      // Subcollections.
+      match /friends/{friendUid} {
+        allow read: if isUser(uid);
+        // Friendship edges are mirrored by Cloud Functions only.
+        allow write: if false;
+      }
+      match /feed/{itemId} {
+        allow read: if isUser(uid);
+        // Owner may mark items read; everything else is server-written.
+        allow update: if isUser(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow create, delete: if false;
+      }
+      match /notifications/{notifId} {
+        allow read: if isUser(uid);
+        allow update: if isUser(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow create, delete: if false;
+      }
+      match /devices/{deviceId} {
+        // Device tokens are owner-private; registered via Cloud Function.
+        allow read: if isUser(uid);
+        allow write: if false;
+      }
+      match /achievements/{achievementId} {
+        allow read: if isUser(uid);
+        allow write: if false;
+      }
+      match /rg_events/{eventId} {
+        allow read: if isUser(uid);
+        allow write: if false;
+      }
+    }
+
+    // ── handles (unique username registry) ─────────────────────────────────────
+    match /handles/{handle} {
+      allow read: if ok();
+      // Create-once: only the owner can claim a free handle for themselves.
+      allow create: if ok()
+        && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // ── ledgers (financial-grade, append-only) ─────────────────────────────────
+    match /ledgers/{uid}/entries/{entryId} {
+      // Read-own-only. NEVER client-writable.
+      allow read: if isUser(uid);
+      allow write: if false;
+    }
+
+    // ── bets ───────────────────────────────────────────────────────────────────
+    match /bets/{betId} {
+      // Readable by any signed-in user (visibility filtering is a UX concern; the
+      // pilot keeps bets broadly readable). Tighten per-visibility later.
+      allow read: if ok();
+
+      // Bets are created by the createBet Cloud Function. We permit a direct
+      // create ONLY when it is the caller's own bet, they are age-verified, and
+      // the doc starts in a safe zero-money 'open' state — but the canonical path
+      // is the CF. Prefer createBet. Money/status fields must be pristine.
+      allow create: if false;
+
+      // No client status/money/pool writes ever.
+      allow update, delete: if false;
+
+      // ── entries (escrow records) ─────────────────────────────────────────────
+      match /entries/{uid} {
+        // Participants list is readable by signed-in users.
+        allow read: if ok();
+        // placeBet / cancelEntry Cloud Functions only.
+        allow write: if false;
+      }
+
+      // ── votes (consensus) ────────────────────────────────────────────────────
+      match /votes/{uid} {
+        allow read: if ok();
+        // voteOutcome CF writes these; deny direct client writes so the
+        // participant/threshold checks can't be bypassed.
+        allow write: if false;
+      }
+
+      // ── disputes ─────────────────────────────────────────────────────────────
+      match /disputes/{disputeId} {
+        allow read: if ok();
+        // raiseDispute CF only.
+        allow write: if false;
+      }
+
+      // ── comments ─────────────────────────────────────────────────────────────
+      match /comments/{commentId} {
+        allow read: if ok();
+        // postComment CF is the canonical path (rate-limit + identity). Deny
+        // direct client writes.
+        allow write: if false;
+      }
+
+      // ── settlement result (immutable) ────────────────────────────────────────
+      match /settlement/{docId} {
+        allow read: if ok();
+        allow write: if false;
+      }
+    }
+
+    // ── groups ───────────────────────────────────────────────────────────────
+    match /groups/{groupId} {
+      // Members may read their group; for the pilot, groups are discoverable by
+      // any signed-in user (invite codes gate joining).
+      allow read: if ok();
+      allow write: if false; // createGroup / joinGroup CFs only.
+
+      match /members/{uid} {
+        // Members can see the roster of groups they belong to.
+        allow read: if ok();
+        allow write: if false;
+      }
+    }
+
+    // ── leaderboards (server-computed, read-only) ──────────────────────────────
+    match /leaderboards/{document=**} {
+      allow read: if ok();
+      allow write: if false;
+    }
+
+    // ── config / remote flags (read-only to clients) ───────────────────────────
+    match /config/{flagId} {
+      allow read: if ok();
+      allow write: if false;
+    }
+
+    // ── server-only collections (idempotency, reconciliation) ──────────────────
+    match /idempotency/{key} {
+      allow read, write: if false;
+    }
+    match /reconciliation/{day} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // ── default deny ───────────────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

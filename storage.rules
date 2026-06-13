@@ -1,0 +1,47 @@
+rules_version = '2';
+
+// Chipd Storage rules. All reads require auth (closed social app). Writes are
+// scoped: avatars are owner-only; bet media + dispute evidence may be uploaded
+// by any authed user (the path encodes the bet, and Firestore rules gate who can
+// reference it). Uploads are size- and content-type-limited.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    function underSize(maxMb) {
+      return request.resource.size < maxMb * 1024 * 1024;
+    }
+
+    // Avatars: avatars/{uid}/{file} — writable by the owner only.
+    match /avatars/{uid}/{file=**} {
+      allow read: if signedIn();
+      allow write: if isOwner(uid) && isImage() && underSize(8);
+    }
+
+    // Bet media: bets/{betId}/{file} — any authed user may upload (cover images).
+    match /bets/{betId}/{file=**} {
+      allow read: if signedIn();
+      allow write: if signedIn() && isImage() && underSize(16);
+    }
+
+    // Dispute evidence: evidence/{betId}/{file} — any authed user may upload.
+    match /evidence/{betId}/{file=**} {
+      allow read: if signedIn();
+      allow write: if signedIn() && (isImage() || request.resource.contentType.matches('video/.*')) && underSize(64);
+    }
+
+    // Default deny.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
