@@ -118,6 +118,7 @@ function AuthGate({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="user" />
         <Stack.Screen name="leaderboard" />
         <Stack.Screen name="wallet" />
+        <Stack.Screen name="shop" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="(modals)" options={{ presentation: 'modal' }} />
         <Stack.Screen name="+not-found" />

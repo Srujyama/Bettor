@@ -136,6 +136,17 @@ export const LEDGER_REASON = {
   RAKE: 'rake', // house commission (0 in pilot)
   ADMIN_ADJUSTMENT: 'admin_adjustment', // trust & safety
   REVERSAL: 'reversal', // compensating entry (never edit)
+  // ── expansion economy ──
+  MISSION_REWARD: 'mission_reward', // completing a daily/weekly mission
+  SEASON_REWARD: 'season_reward', // end-of-season placement reward
+  LEVEL_UP_REWARD: 'level_up_reward', // reaching a new level
+  STREAK_REWARD: 'streak_reward', // login / win streak milestone
+  SHOP_PURCHASE: 'shop_purchase', // debit to buy a cosmetic / power-up
+  POWERUP_USE: 'powerup_use', // debit to activate a power-up
+  POWERUP_PAYOUT: 'powerup_payout', // credit from a power-up resolving (e.g. insurance)
+  PRO_SUBSCRIPTION: 'pro_subscription', // debit for a Pro period (Chips, cosmetic-tier)
+  GIFT_SENT: 'gift_sent', // debit: co-bet contribution on a friend's behalf (inside a bet)
+  GIFT_RECEIVED: 'gift_received', // credit counterpart
 } as const;
 export type LedgerReason = (typeof LEDGER_REASON)[keyof typeof LEDGER_REASON];
 

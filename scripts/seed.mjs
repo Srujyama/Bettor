@@ -176,7 +176,39 @@ async function main() {
     }
   }
 
-  console.log(`✓ Seeded ${DEMO.length} users and ${BETS.length} bets.`);
+  // ── Expansion content: an active season, sports fixtures, missions ──
+  const seasonId = 'season_1';
+  await db.doc(`seasons/${seasonId}`).set({
+    seasonId, name: 'Season 1 — Pearl of the Orient', number: 1,
+    startsAt: now - 10 * 24 * HOUR, endsAt: now + 20 * 24 * HOUR, active: true,
+  }, { merge: true });
+  let rank = 1;
+  for (const d of [...DEMO].sort((a, b) => b.won - a.won)) {
+    await db.doc(`seasons/${seasonId}/standings/${d.uid}`).set({
+      uid: d.uid, displayName: d.name, photoURL: null,
+      netChips: d.won * 350 - (d.won + d.lost) * 200, winCount: d.won,
+      xpEarned: d.won * 140, rank: rank++,
+    }, { merge: true });
+  }
+
+  const FIXTURES = [
+    { id: 'fx_lakers', sport: 'Basketball', league: 'NBA', home: 'Lakers', away: 'Celtics', inH: 3 },
+    { id: 'fx_city', sport: 'Football', league: 'EPL', home: 'Man City', away: 'Arsenal', inH: 6 },
+    { id: 'fx_ufc', sport: 'MMA', league: 'UFC', home: 'Adesanya', away: 'Pereira', inH: 26 },
+    { id: 'fx_live', sport: 'Basketball', league: 'NBA', home: 'Heat', away: 'Knicks', inH: -1, live: true },
+  ];
+  for (const f of FIXTURES) {
+    await db.doc(`fixtures/${f.id}`).set({
+      fixtureId: f.id, league: f.league, sport: f.sport,
+      homeTeam: f.home, awayTeam: f.away, homeLogo: null, awayLogo: null,
+      startsAt: now + f.inH * HOUR,
+      status: f.live ? 'live' : 'scheduled',
+      homeScore: f.live ? 58 : null, awayScore: f.live ? 61 : null,
+      period: f.live ? 'Q3 4:12' : null, winner: null,
+    }, { merge: true });
+  }
+
+  console.log(`✓ Seeded ${DEMO.length} users, ${BETS.length} bets, 1 season, ${FIXTURES.length} fixtures.`);
   console.log('  Demo login (Auth emulator): alextan@example.com / chipd123');
   process.exit(0);
 }

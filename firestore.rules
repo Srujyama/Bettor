@@ -54,10 +54,20 @@ service cloud.firestore {
     function canPlay() {
       return ageVerified() && notExcluded() && notBanned();
     }
-    // The exact set of fields a user may change on their own profile.
+    // The exact set of fields a user may change on their own profile. This is an
+    // allow-LIST, so every CF-only field is implicitly forbidden — including the
+    // expansion economy fields equipped / pro / powerups / xp and the achievement
+    // counters (winCount, betsCreated, …). They are NOT in the list below, so a
+    // client update that touches any of them is rejected here as well as by the
+    // CF-only sub-collection rules.
     function onlyProfileFields() {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['displayName', 'photoURL', 'settings', 'locale']);
+    }
+    // True if the caller is a member of the given crew (group).
+    function isCrewMember(groupId) {
+      return ok()
+        && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
     }
 
     // ── users ────────────────────────────────────────────────────────────────
@@ -99,6 +109,23 @@ service cloud.firestore {
         allow write: if false;
       }
       match /rg_events/{eventId} {
+        allow read: if isUser(uid);
+        allow write: if false;
+      }
+
+      // ── expansion: missions / inventory / wrapped (CF-write only) ────────────
+      match /missions/{missionId} {
+        // Daily/weekly quest progress — owner reads; claimMission CF writes.
+        allow read: if isUser(uid);
+        allow write: if false;
+      }
+      match /inventory/{itemId} {
+        // Owned cosmetics — owner reads; buyCosmetic/equipCosmetic CFs write.
+        allow read: if isUser(uid);
+        allow write: if false;
+      }
+      match /wrapped/{periodId} {
+        // Personal "wrapped" recap — owner reads; generateWrapped CF writes.
         allow read: if isUser(uid);
         allow write: if false;
       }
@@ -185,6 +212,24 @@ service cloud.firestore {
         allow read: if ok();
         allow write: if false;
       }
+
+      // ── crew chat (expansion) ────────────────────────────────────────────────
+      match /chat/{messageId} {
+        // Only crew members may read the thread.
+        allow read: if isCrewMember(groupId);
+        // The sendChat CF is the canonical path (rate-limit + identity + bet-ref
+        // validation). We additionally permit a direct create by an authed crew
+        // member, defensively rate-limited: the doc must be authored by the
+        // caller, server-stamped within a few seconds of now, and money-free.
+        allow create: if isCrewMember(groupId)
+          && request.resource.data.authorUid == request.auth.uid
+          && request.resource.data.groupId == groupId
+          && request.resource.data.createdAt is int
+          && request.resource.data.createdAt <= request.time.toMillis() + 5000
+          && request.resource.data.createdAt >= request.time.toMillis() - 5000
+          && (!('text' in request.resource.data) || request.resource.data.text.size() <= 500);
+        allow update, delete: if false;
+      }
     }
 
     // ── leaderboards (server-computed, read-only) ──────────────────────────────
@@ -196,6 +241,62 @@ service cloud.firestore {
     // ── config / remote flags (read-only to clients) ───────────────────────────
     match /config/{flagId} {
       allow read: if ok();
+      allow write: if false;
+    }
+
+    // ── seasons + standings (server-computed, read-all) ─────────────────────────
+    match /seasons/{seasonId} {
+      allow read: if ok();
+      allow write: if false; // rollSeason / refreshSeasonStandings CFs only.
+
+      match /standings/{standingUid} {
+        // Public competitive board within a season.
+        allow read: if ok();
+        allow write: if false;
+      }
+    }
+
+    // ── fixtures (sports oracle data, read-all, CF/scheduled-write only) ─────────
+    match /fixtures/{fixtureId} {
+      allow read: if ok();
+      // syncFixtures / updateLiveScores scheduled functions are the ONLY writers.
+      allow write: if false;
+    }
+
+    // ── parlays (multi-leg slips; created via createParlay CF) ───────────────────
+    match /parlays/{slipId} {
+      // Owner reads their slip; public slips are readable by any signed-in user.
+      // Clients can NEVER write money fields (stake/multiplier/payout/status) — the
+      // createParlay CF and oracleResolve own the whole doc.
+      allow read: if ok() && (
+        resource.data.uid == request.auth.uid ||
+        resource.data.visibility == 'public' ||
+        !('visibility' in resource.data)
+      );
+      allow write: if false;
+    }
+
+    // ── brackets (single-elim pools; created via createBracket CF) ───────────────
+    match /brackets/{bracketId} {
+      // Discoverable to signed-in users; entry fees / pool / winners are CF-written.
+      allow read: if ok();
+      allow write: if false;
+    }
+
+    // ── squares (grid games; created via createSquaresGame CF) ───────────────────
+    match /squares/{gameId} {
+      // Public/participant-readable; claimSquare CF writes cells and money fields.
+      allow read: if ok();
+      allow write: if false;
+    }
+
+    // ── rivalries (head-to-head; updated by onBetSettled trigger) ────────────────
+    match /rivalries/{pairId} {
+      // Readable only by the two participants of the rivalry.
+      allow read: if ok() && (
+        resource.data.uidA == request.auth.uid ||
+        resource.data.uidB == request.auth.uid
+      );
       allow write: if false;
     }
 

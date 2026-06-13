@@ -78,13 +78,23 @@ See **[SETUP.md](./SETUP.md)** for the full checklist.
 - **Wallet** — balance, daily Chips, free refill at zero, full ledger
 - **Leaderboard · Crews (groups) · Settings · Responsible Gaming (limits, self-exclusion, reality checks, "My Activity")**
 
+## Rich feature set (expansion)
+Beyond the core lifecycle, Chipd now includes:
+- **Gamification** — XP & levels (with a level-up Chip reward curve), an achievements gallery (22 badges across bronze→platinum, incl. secret ones), daily & weekly **missions/quests**, competitive **seasons** with placement rewards & standings, and a swipeable **"Chipd Wrapped"** stats recap with a shareable card.
+- **New bet formats** — **parlays** (multi-leg, all-must-hit, capped multiplier), **squares** (interactive 10×10 grid), single-elimination **brackets/tournaments**, a **quick-bet template library**, one-tap **rematch**, and **challenge-a-friend** head-to-head.
+- **Live sports** — a sports browse screen (leagues, upcoming + live fixtures with scores/clock), fixture detail with one-tap "bet on this game", and an **oracle** that auto-resolves sports-tagged bets (and parlay legs) from final scores. Behind a provider port with a deterministic mock — drop in a real sports API later with one adapter.
+- **Social depth & virality** — head-to-head **rivalry** pages, **crew chat** (text + stickers you own + share-a-bet), **shareable cards** (bet results, stat flexes, leaderboard, Wrapped) via view-shot, a **referral** program with deep links, reaction fly-ups, and profile **flair** (equipped frames + name colors).
+- **Economy & cosmetics** — a **shop** of cosmetic-only items (card skins, avatar frames, sticker packs, name colors, win effects) bought with Chips; **power-ups** (insurance, double-or-nothing, peek) honored post-settlement from the house; a **Pro tier** (cosmetic/convenience perks, 2× daily drop); and compliance-safe **co-bet/gifting** that only moves Chips inside a bet pool.
+
+> Compliance note: all shop/Pro/power-up purchases use **Chips only** (no real money), cosmetics are **cosmetic-only** (never pay-to-win on an outcome), and the "no cash value" line is shown in the shop. Power-ups affect only the virtual Chip economy.
+
 ## Bet lifecycle
 `draft → open → locked → pending_resolution → (disputed) → resolved → settled`, with `cancelled` / `voided` escape hatches. Locking, auto-void (refund if unresolved by the deadline), and post-dispute-window settlement run as scheduled sweeps. Resolution can be **creator-declared**, **consensus vote**, or (future) **objective oracle**, always with a dispute window that freezes payouts.
 
 ---
 
 ## Status & known follow-ups
-- ✅ Builds clean: iOS + Android Metro bundles (2,400+ modules), `tsc` 0 errors, 26 Cloud Functions load in the emulator, 23/23 shared tests pass.
+- ✅ Builds clean: iOS + Android Metro bundles (2,500+ modules), `tsc` 0 errors, **57 Cloud Functions** load in the emulator, **41/41 shared tests** pass. 65 screens, 42 domain components.
 - ⚠️ **Phone auth** UI is complete but the JS SDK needs a reCAPTCHA verifier on RN — it currently falls back to email. Wire real phone auth when moving to react-native-firebase.
 - ⚠️ **Google/Apple sign-in** buttons are present but show "coming soon"; wire `expo-auth-session` / native providers.
 - ⚠️ **Push delivery**: device tokens are registered and notification docs are written, but actually sending FCM pushes to those tokens is a follow-up.

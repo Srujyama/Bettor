@@ -33,4 +33,39 @@ export const paths = {
 
   leaderboard: (scope: string, period: string) => `leaderboards/${scope}/periods/${period}`,
   config: (flagId: string) => `config/${flagId}`,
+
+  // ─── Expansion collections (Gamification track owns these path builders) ───
+  // Gamification
+  achievement: (uid: string, key: string) => `users/${uid}/achievements/${key}`,
+  missions: (uid: string) => `users/${uid}/missions`,
+  mission: (uid: string, missionId: string) => `users/${uid}/missions/${missionId}`,
+  inventory: (uid: string) => `users/${uid}/inventory`,
+  inventoryItem: (uid: string, itemId: string) => `users/${uid}/inventory/${itemId}`,
+  wrapped: (uid: string) => `users/${uid}/wrapped`,
+  wrappedDoc: (uid: string, periodId: string) => `users/${uid}/wrapped/${periodId}`,
+  // Seasons
+  seasons: () => `seasons`,
+  season: (seasonId: string) => `seasons/${seasonId}`,
+  seasonStandings: (seasonId: string) => `seasons/${seasonId}/standings`,
+  seasonStanding: (seasonId: string, uid: string) => `seasons/${seasonId}/standings/${uid}`,
+  // Game formats
+  parlays: () => `parlays`,
+  parlay: (slipId: string) => `parlays/${slipId}`,
+  brackets: () => `brackets`,
+  bracket: (bracketId: string) => `brackets/${bracketId}`,
+  squares: () => `squares`,
+  squaresGame: (gameId: string) => `squares/${gameId}`,
+  // Sports
+  fixtures: () => `fixtures`,
+  fixture: (fixtureId: string) => `fixtures/${fixtureId}`,
+  // Social depth
+  rivalries: () => `rivalries`,
+  rivalry: (pairId: string) => `rivalries/${pairId}`,
+  crewChat: (groupId: string) => `groups/${groupId}/chat`,
+  crewChatMessage: (groupId: string, messageId: string) => `groups/${groupId}/chat/${messageId}`,
 } as const;
+
+/** Stable, order-independent rivalry pair id from two uids. */
+export function rivalryPairId(a: string, b: string): string {
+  return [a, b].sort().join('__');
+}

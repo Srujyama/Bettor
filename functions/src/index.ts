@@ -24,6 +24,35 @@ export { createGroup, joinGroup } from './callables/groups';
 export { postComment } from './callables/postComment';
 export { registerDevice } from './callables/registerDevice';
 
+// ── Social depth & virality (expansion) ─────────────────────────────────────
+export { sendChat } from './callables/sendChat';
+export { claimReferral } from './callables/claimReferral';
+
+// ── Economy & cosmetics (expansion) ──────────────────────────────────────────
+export {
+  buyCosmetic,
+  equipCosmetic,
+  buyPowerUp,
+  subscribePro,
+  applyPowerUp,
+  giftIntoBet,
+} from './callables/economy';
+
+// ── Gamification (expansion) ──────────────────────────────────────────────────
+export { ensureMissions, claimMission } from './callables/missions';
+export { generateWrapped } from './callables/generateWrapped';
+
+// ── Live sports oracle (expansion) ───────────────────────────────────────────
+export { createBetFromFixture } from './callables/createBetFromFixture';
+
+// ── Bet formats: parlays / squares / brackets / challenge (Formats track) ─────
+export { createParlay } from './callables/createParlay';
+export { createSquaresGame } from './callables/createSquares';
+export { claimSquare } from './callables/claimSquare';
+export { createBracket, advanceBracket } from './callables/bracket';
+export { challengeFriend } from './callables/challengeFriend';
+export { settleSquares } from './settlement/settleSquares';
+
 // ── Settlement engine (admin/system callable) ───────────────────────────────
 export { settleBet } from './settlement/settle';
 
@@ -33,9 +62,25 @@ export { tallyVotes } from './triggers/tallyVotes';
 export { onBetSettled } from './triggers/onBetSettled';
 export { onBetCreate } from './triggers/onBetCreate';
 export { onFriendRequest } from './triggers/onFriendRequest';
+export { onSettlementRivalry } from './triggers/onSettlementRivalry';
+export { onBetSettledPowerUps } from './triggers/onBetSettledPowerUps';
+export { awardProgress } from './triggers/awardProgress';
 
 // ── Scheduled sweeps ─────────────────────────────────────────────────────────
 export { lockBetsSweep } from './scheduled/lockBetsSweep';
 export { autoVoidSweep } from './scheduled/autoVoidSweep';
 export { settleAfterDisputeWindow } from './scheduled/settleAfterDisputeWindow';
 export { reconcileBalances } from './scheduled/reconcileBalances';
+export { expirePro } from './scheduled/expirePro';
+
+// ── Live sports oracle sweeps (expansion) ─────────────────────────────────────
+export { syncFixtures } from './scheduled/syncFixtures';
+export { updateLiveScores } from './scheduled/updateLiveScores';
+export { oracleResolve } from './scheduled/oracleResolve';
+
+// ── Gamification sweeps (expansion) ───────────────────────────────────────────
+export { rollSeason, refreshSeasonStandings } from './scheduled/rollSeason';
+export { rotateDailyMissions, rotateWeeklyMissions } from './scheduled/rotateMissions';
+
+// ── Bet formats sweeps (Formats track) ────────────────────────────────────────
+export { settleParlaysSweep } from './scheduled/settleParlaysSweep';

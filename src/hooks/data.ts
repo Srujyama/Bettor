@@ -4,7 +4,7 @@
  */
 import { orderBy, limit as fbLimit, where } from 'firebase/firestore';
 import { useSession } from '@/stores/session';
-import { paths } from '@/lib/firebase/paths';
+import { paths, rivalryPairId } from '@/lib/firebase/paths';
 import { useCollectionQuery, useDocQuery } from './useFirestoreQuery';
 import type {
   AppNotification,
@@ -19,6 +19,20 @@ import type {
   User,
   Vote,
 } from '@/shared/schemas';
+import type {
+  Bracket,
+  ChatMessage,
+  Fixture,
+  InventoryItem,
+  ParlaySlip,
+  Rivalry,
+  Season,
+  SeasonStanding,
+  SquaresGame,
+  UserAchievement,
+  UserMission,
+  Wrapped,
+} from '@/shared/schemas-ext';
 
 export function useCurrentUser() {
   const uid = useSession((s) => s.uid);
@@ -159,4 +173,159 @@ export function useGroups() {
 
 export function useGroup(groupId: string | null) {
   return useDocQuery<Group>(['group', groupId], groupId ? paths.group(groupId) : null, !!groupId);
+}
+
+// ─── Expansion read hooks ──────────────────────────────────────────────────────
+// All live (onSnapshot-backed) reads for the gamification, economy, formats,
+// sports, and social-depth tracks. Money/inventory are CF-written; these only
+// read. Owned by the Social track per the expansion coordination rules.
+
+/** A user's unlocked achievements (own by default, any uid for public profiles). */
+export function useAchievements(uid?: string | null) {
+  const myUid = useSession((s) => s.uid);
+  const target = uid ?? myUid ?? null;
+  return useCollectionQuery<UserAchievement>(
+    ['achievements', target],
+    target ? paths.achievements(target) : null,
+    [orderBy('unlockedAt', 'desc')],
+    !!target,
+  );
+}
+
+/** The current user's active daily/weekly missions. */
+export function useMissions() {
+  const uid = useSession((s) => s.uid);
+  return useCollectionQuery<UserMission>(
+    ['missions', uid],
+    uid ? paths.missions(uid) : null,
+    [orderBy('expiresAt', 'asc')],
+    !!uid,
+  );
+}
+
+/** The current user's owned cosmetics inventory. */
+export function useInventory() {
+  const uid = useSession((s) => s.uid);
+  return useCollectionQuery<InventoryItem>(
+    ['inventory', uid],
+    uid ? paths.inventory(uid) : null,
+    [orderBy('acquiredAt', 'desc')],
+    !!uid,
+  );
+}
+
+/** The single active competitive season (newest first; first row is current). */
+export function useSeason() {
+  return useCollectionQuery<Season>(
+    ['seasons', 'active'],
+    paths.seasons(),
+    [where('active', '==', true), fbLimit(1)],
+    true,
+  );
+}
+
+/** Standings for a season (defaults to a leaderboard-sized slice). */
+export function useSeasonStandings(seasonId: string | null, max = 50) {
+  return useCollectionQuery<SeasonStanding>(
+    ['season', seasonId, 'standings', max],
+    seasonId ? paths.seasonStandings(seasonId) : null,
+    [orderBy('rank', 'asc'), fbLimit(max)],
+    !!seasonId,
+  );
+}
+
+/** The current user's Wrapped summary for a period (e.g. a month or season). */
+export function useWrapped(periodId: string | null) {
+  const uid = useSession((s) => s.uid);
+  const enabled = !!uid && !!periodId;
+  return useDocQuery<Wrapped>(
+    ['wrapped', uid, periodId],
+    enabled ? paths.wrappedDoc(uid as string, periodId as string) : null,
+    enabled,
+  );
+}
+
+/** A single parlay slip by id. */
+export function useParlay(id: string | null) {
+  return useDocQuery<ParlaySlip>(['parlay', id], id ? paths.parlay(id) : null, !!id);
+}
+
+/** Parlay slips — all live, or just the current user's, per the filter. */
+export function useParlaySlips(filter: { mine?: boolean; status?: ParlaySlip['status'] } = {}, max = 30) {
+  const uid = useSession((s) => s.uid);
+  const constraints = [] as Parameters<typeof useCollectionQuery>[2];
+  if (filter.mine && uid) constraints.push(where('uid', '==', uid));
+  if (filter.status) constraints.push(where('status', '==', filter.status));
+  constraints.push(orderBy('createdAt', 'desc'), fbLimit(max));
+  const enabled = filter.mine ? !!uid : true;
+  return useCollectionQuery<ParlaySlip>(
+    ['parlays', filter.mine ? uid : 'all', filter.status ?? 'any', max],
+    paths.parlays(),
+    constraints,
+    enabled,
+  );
+}
+
+/** A single squares game by id. */
+export function useSquares(id: string | null) {
+  return useDocQuery<SquaresGame>(['squares', id], id ? paths.squaresGame(id) : null, !!id);
+}
+
+/** A single bracket by id. */
+export function useBracket(id: string | null) {
+  return useDocQuery<Bracket>(['bracket', id], id ? paths.bracket(id) : null, !!id);
+}
+
+/** Sports fixtures — optionally narrowed by sport / league / status. */
+export function useFixtures(
+  filter: { sport?: string; league?: string; status?: Fixture['status'] } = {},
+  max = 50,
+) {
+  const constraints = [] as Parameters<typeof useCollectionQuery>[2];
+  if (filter.sport) constraints.push(where('sport', '==', filter.sport));
+  if (filter.league) constraints.push(where('league', '==', filter.league));
+  if (filter.status) constraints.push(where('status', '==', filter.status));
+  constraints.push(orderBy('startsAt', 'asc'), fbLimit(max));
+  return useCollectionQuery<Fixture>(
+    ['fixtures', filter.sport ?? 'any', filter.league ?? 'any', filter.status ?? 'any', max],
+    paths.fixtures(),
+    constraints,
+    true,
+  );
+}
+
+/** A single fixture by id (live scores stream in). */
+export function useFixture(id: string | null) {
+  return useDocQuery<Fixture>(['fixture', id], id ? paths.fixture(id) : null, !!id);
+}
+
+/** Currently-live fixtures across all sports. */
+export function useLiveFixtures(max = 30) {
+  return useCollectionQuery<Fixture>(
+    ['fixtures', 'live', max],
+    paths.fixtures(),
+    [where('status', '==', 'live'), orderBy('startsAt', 'asc'), fbLimit(max)],
+    true,
+  );
+}
+
+/** The head-to-head rivalry doc between the current user and another user. */
+export function useRivalry(otherUid: string | null) {
+  const uid = useSession((s) => s.uid);
+  const pairId = uid && otherUid ? rivalryPairId(uid, otherUid) : null;
+  return useDocQuery<Rivalry>(
+    ['rivalry', pairId],
+    pairId ? paths.rivalry(pairId) : null,
+    !!pairId,
+  );
+}
+
+/** Live crew chat for a group, oldest→newest (capped). */
+export function useCrewChat(groupId: string | null, max = 100) {
+  return useCollectionQuery<ChatMessage>(
+    ['crewChat', groupId, max],
+    groupId ? paths.crewChat(groupId) : null,
+    [orderBy('createdAt', 'asc'), fbLimit(max)],
+    !!groupId,
+  );
 }

@@ -8,7 +8,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Avatar, Button, Card, Input, Pill, Screen, Txt } from '@/components/ui';
-import { StatBadge } from '@/components/domain';
+import { LevelRing, StatBadge } from '@/components/domain';
 import { colors } from '@/theme';
 import { paths } from '@/lib/firebase/paths';
 import { useCollectionQuery } from '@/hooks/useFirestoreQuery';
@@ -72,6 +72,13 @@ export default function ProfileScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 16 }}>
         <ProfileHeader user={user} />
 
+        {/* Play hub: level + entry points to season/missions/achievements/shop */}
+        <PlayHubCard
+          xp={user.xp}
+          onOpenPlay={() => router.push('/play')}
+          onOpenLevel={() => router.push('/level')}
+        />
+
         {/* Record + rates */}
         <View className="flex-row gap-2">
           <StatBadge label="Record" value={`${user.winCount}–${user.lossCount}`} tone="default" />
@@ -89,7 +96,10 @@ export default function ProfileScreen() {
         </View>
 
         {/* Achievements strip */}
-        <AchievementStrip achievements={achievements ?? []} />
+        <AchievementStrip
+          achievements={achievements ?? []}
+          onSeeAll={() => router.push('/achievements')}
+        />
 
         {/* Crews */}
         <CrewList groups={myGroups} onPress={(id) => router.push(`/group/${id}`)} />
@@ -102,7 +112,9 @@ export default function ProfileScreen() {
           <Row label="Chips wagered" value={formatChips(user.lifetimeWagered)} />
           <Row label="Chips won" value={formatChips(user.lifetimeWon)} valueColor={colors.jade} />
           <Row label="Games played" value={String(stats.games)} />
-          <Row label="Level" value={`Lv ${user.level} · ${formatChips(user.xp)} XP`} />
+          <Pressable onPress={() => router.push('/level')} accessibilityRole="button">
+            <Row label="Level" value={`Lv ${user.level} · ${formatChips(user.xp)} XP  ›`} />
+          </Pressable>
         </Card>
 
         <Button
@@ -112,6 +124,31 @@ export default function ProfileScreen() {
         />
       </ScrollView>
     </Screen>
+  );
+}
+
+function PlayHubCard({
+  xp,
+  onOpenPlay,
+  onOpenLevel,
+}: {
+  xp: number;
+  onOpenPlay: () => void;
+  onOpenLevel: () => void;
+}) {
+  return (
+    <Card raised className="flex-row items-center gap-4">
+      <Pressable onPress={onOpenLevel} accessibilityRole="button">
+        <LevelRing xp={xp} size={76} stroke={7} />
+      </Pressable>
+      <View className="flex-1 gap-1">
+        <Txt variant="label">Play & progress</Txt>
+        <Txt variant="caption" muted>
+          Season, missions, achievements and the shop.
+        </Txt>
+      </View>
+      <Button label="Open" tone="jade" size="sm" fullWidth={false} onPress={onOpenPlay} />
+    </Card>
   );
 }
 
@@ -193,12 +230,21 @@ function ProfileHeader({ user }: { user: User }) {
   );
 }
 
-function AchievementStrip({ achievements }: { achievements: Achievement[] }) {
+function AchievementStrip({
+  achievements,
+  onSeeAll,
+}: {
+  achievements: Achievement[];
+  onSeeAll: () => void;
+}) {
   return (
     <View className="gap-2">
-      <Txt variant="label" dim className="px-1 uppercase tracking-wide">
-        Achievements
-      </Txt>
+      <View className="flex-row items-center justify-between px-1">
+        <Txt variant="label" dim className="uppercase tracking-wide">
+          Achievements
+        </Txt>
+        <Button label="See all" tone="ghost" size="sm" fullWidth={false} onPress={onSeeAll} />
+      </View>
       {achievements.length === 0 ? (
         <Card className="items-center py-5">
           <Txt variant="caption" muted>
