@@ -99,7 +99,7 @@ function Header({
   onOpenBet: (betId: string) => void;
 }) {
   return (
-    <View className="gap-5 pb-4 pt-2">
+    <View className="gap-4 pb-3 pt-1">
       {/* Greeting + wallet chip */}
       <View className="flex-row items-center justify-between">
         <View className="flex-1 pr-3">

@@ -52,7 +52,7 @@ export default function DiscoverScreen() {
 
   return (
     <Screen>
-      <View className="gap-4 px-4 pt-2">
+      <View className="gap-3 px-4 pt-1">
         <View className="flex-row items-center justify-between">
           <Txt variant="title">Discover</Txt>
           <Pressable
@@ -60,9 +60,9 @@ export default function DiscoverScreen() {
             hitSlop={12}
             accessibilityRole="button"
             accessibilityLabel="Search"
-            className="h-10 w-10 items-center justify-center rounded-full bg-surface-raised"
+            className="h-9 w-9 items-center justify-center rounded-full bg-surface-raised"
           >
-            <Txt style={{ fontSize: 18 }}>🔍</Txt>
+            <Txt style={{ fontSize: 16 }}>🔍</Txt>
           </Pressable>
         </View>
         <Input

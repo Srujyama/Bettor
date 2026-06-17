@@ -6,9 +6,9 @@ cssInterop(RNText, { className: 'style' });
 type Variant = 'display' | 'title' | 'heading' | 'body' | 'label' | 'caption' | 'mono';
 
 const VARIANT: Record<Variant, string> = {
-  display: 'text-text font-display text-5xl tracking-tight',
-  title: 'text-text font-display text-3xl tracking-tight',
-  heading: 'text-text font-sans text-xl font-semibold',
+  display: 'text-text font-display text-4xl tracking-tight',
+  title: 'text-text font-display text-2xl tracking-tight',
+  heading: 'text-text font-sans text-lg font-semibold',
   body: 'text-text font-sans text-base',
   label: 'text-text font-sans text-sm font-medium',
   caption: 'text-text-dim font-sans text-xs',

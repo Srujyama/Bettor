@@ -31,7 +31,6 @@ import { useOnboarding } from '@/stores/ui';
 import { WinCelebration } from '@/components/domain';
 import { AppServices } from '@/components/AppServices';
 import { ToastHost } from '@/components/ToastHost';
-import { DevSkipButton } from '@/components/DevSkipButton';
 import { ChipCounter, Txt } from '@/components/ui';
 import { colors } from '@/theme';
 import { ECONOMY } from '@/shared/constants';
@@ -59,7 +58,6 @@ export default function RootLayout() {
               }
             />
             <ToastHost />
-            <DevSkipButton />
           </BottomSheetModalProvider>
         </PersistQueryClientProvider>
       </SafeAreaProvider>
