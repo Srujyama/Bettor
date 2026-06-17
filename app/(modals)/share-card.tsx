@@ -17,7 +17,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import * as Clipboard from 'expo-clipboard';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Button, Screen, Txt } from '@/components/ui';
 import { ShareableCard, type ShareCardData } from '@/components/domain';
 import {

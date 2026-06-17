@@ -6,7 +6,7 @@
  * toast and invalidate the query keys the server mutation may have changed.
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { fns } from '@/lib/firebase';
 import { makeIdempotencyKey } from '@/shared/ids';
 

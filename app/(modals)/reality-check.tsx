@@ -109,7 +109,7 @@ export default function RealityCheckModal() {
           </View>
         </Card>
 
-        <Txt variant="caption" muted className="text-center" style={{ color: colors.textFaint }}>
+        <Txt variant="caption" muted className="text-center">
           {NO_CASH_VALUE_DISCLOSURE}
         </Txt>
       </ScrollView>

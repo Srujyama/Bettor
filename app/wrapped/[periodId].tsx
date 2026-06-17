@@ -14,10 +14,11 @@ import {
   type NativeScrollEvent,
   type NativeSyntheticEvent,
 } from 'react-native';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { captureRef } from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Button, Screen, Txt } from '@/components/ui';
 import { WrappedSlide } from '@/components/domain';
 import { colors } from '@/theme';
@@ -87,6 +88,7 @@ function buildSlides(w: Wrapped): SlideSpec[] {
 }
 
 export default function WrappedScreen() {
+  const insets = useSafeAreaInsets();
   const { periodId } = useLocalSearchParams<{ periodId: string }>();
   const resolvedPeriod = periodId && periodId !== 'current' ? periodId : null;
   const { data: wrapped } = useWrapped(resolvedPeriod);
@@ -140,10 +142,22 @@ export default function WrappedScreen() {
     <Screen edges={['bottom']}>
       <Stack.Screen options={{ title: 'Chipd Wrapped', headerShown: false }} />
       <View className="flex-1">
+        {/* Close button — sits in the top safe-area inset so the story isn't a trap. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close Wrapped"
+          onPress={() => router.back()}
+          hitSlop={12}
+          className="absolute right-5 z-20 h-9 w-9 items-center justify-center rounded-full border border-hairline bg-surface-raised"
+          style={{ top: insets.top + 16 }}
+        >
+          <Txt style={{ color: colors.text, fontSize: 16, fontWeight: '700' }}>✕</Txt>
+        </Pressable>
+
         {/* Progress dots */}
         <View
           className="absolute left-0 right-0 z-10 flex-row justify-center gap-1.5 px-6"
-          style={{ top: 12 }}
+          style={{ top: insets.top + 12 }}
           pointerEvents="none"
         >
           {slides.map((_, i) => (
@@ -202,9 +216,6 @@ export default function WrappedScreen() {
           />
         </View>
       </View>
-
-      {/* Tap zones to advance/rewind feel optional; swipe drives the pager. */}
-      <Pressable accessibilityRole="button" style={{ height: 0 }} />
     </Screen>
   );
 }

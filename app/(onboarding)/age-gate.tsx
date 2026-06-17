@@ -9,7 +9,7 @@ import { forwardRef, useMemo, useRef, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Screen, Txt, Button } from '@/components/ui';
 import { colors } from '@/theme';
 import { fns } from '@/lib/firebase';

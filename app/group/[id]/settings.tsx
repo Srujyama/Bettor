@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Alert, ScrollView, Share, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Button, Card, Screen, Txt } from '@/components/ui';
 import { colors } from '@/theme';
 import { setDocData, serverTimestamp } from '@/lib/firebase';

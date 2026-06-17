@@ -110,6 +110,10 @@ export function StakeSlider({
     return { width: x + KNOB / 2 };
   });
 
+  // The +/- increment. NOT `min` (which can be 0 → dead buttons, or huge → jumps):
+  // a round step scaled to the range, at least 10 Chips.
+  const stepBy = Math.max(10, Math.round((hi - min) / 20 / 10) * 10 || 10);
+
   const step = (delta: number) => {
     const next = clamp(value + delta, min, hi);
     if (next !== value) {
@@ -144,7 +148,7 @@ export function StakeSlider({
 
       {/* Stepper + track */}
       <View className="flex-row items-center gap-3">
-        <Stepper label="−" onPress={() => step(-min)} disabled={value <= min} />
+        <Stepper label="−" onPress={() => step(-stepBy)} disabled={value <= min} />
         <View className="flex-1 justify-center" style={{ height: KNOB }}>
           <View
             onLayout={onLayout}
@@ -186,7 +190,7 @@ export function StakeSlider({
             </GestureDetector>
           </View>
         </View>
-        <Stepper label="+" onPress={() => step(min)} disabled={value >= hi} />
+        <Stepper label="+" onPress={() => step(stepBy)} disabled={value >= hi} />
       </View>
 
       {/* Quick chips */}

@@ -83,7 +83,7 @@ export default function DiscoverScreen() {
       <FlashList
         data={filtered}
         keyExtractor={(b: Bet) => b.betId}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 110 }}
         ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
         renderItem={({ item }) => <BetCard bet={item} onPress={openBet} />}
         ListEmptyComponent={

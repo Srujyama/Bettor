@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Screen, Txt, Button, Input, Avatar, Card } from '@/components/ui';
 import { paths, getDocOnce, fns } from '@/lib/firebase';
 import { useSession } from '@/stores/session';

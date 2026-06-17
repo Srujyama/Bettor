@@ -11,7 +11,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { formatDistanceToNowStrict } from 'date-fns';
 import {
   Avatar,
@@ -132,7 +132,7 @@ export default function BetDetailScreen() {
 
   const goPlace = (outcomeId?: string) => {
     const q = outcomeId ? `?betId=${bet.betId}&outcomeId=${outcomeId}` : `?betId=${bet.betId}`;
-    router.push(`/(modals)/place-stake${q}`);
+    router.push(`/(modals)/place-stake${q}` as never);
   };
 
   const share = async () => {

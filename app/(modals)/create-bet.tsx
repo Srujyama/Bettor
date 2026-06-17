@@ -11,7 +11,7 @@
  * routes to the new bet on success.
  */
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
@@ -253,6 +253,10 @@ export default function CreateBetModal() {
 
       <StepDots count={STEPS.length} active={step} />
 
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 32, gap: 20 }} keyboardShouldPersistTaps="handled">
         <Txt variant="title">{STEPS[step]}</Txt>
 
@@ -341,6 +345,7 @@ export default function CreateBetModal() {
           />
         )}
       </View>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

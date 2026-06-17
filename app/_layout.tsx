@@ -30,6 +30,7 @@ import { useSession, isOnboarded } from '@/stores/session';
 import { useOnboarding } from '@/stores/ui';
 import { WinCelebration } from '@/components/domain';
 import { AppServices } from '@/components/AppServices';
+import { ToastHost } from '@/components/ToastHost';
 import { ChipCounter, Txt } from '@/components/ui';
 import { colors } from '@/theme';
 import { ECONOMY } from '@/shared/constants';
@@ -56,6 +57,7 @@ export default function RootLayout() {
                 router.push(`/(modals)/share-card?type=bet_result&id=${betId}` as never)
               }
             />
+            <ToastHost />
           </BottomSheetModalProvider>
         </PersistQueryClientProvider>
       </SafeAreaProvider>

@@ -8,7 +8,7 @@
 import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Button, Card, EmptyState, Input, Pill, Screen, Txt } from '@/components/ui';
 import { BetCard, RivalryCard } from '@/components/domain';
 import { useChallengeFriend } from '@/features/social/virality';

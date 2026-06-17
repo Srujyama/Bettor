@@ -55,7 +55,7 @@ export default function FeedScreen() {
       <FlashList
         data={feed ?? []}
         keyExtractor={(item) => item.itemId}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 110 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.jade} />
         }

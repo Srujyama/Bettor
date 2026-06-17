@@ -7,7 +7,7 @@
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { limit, orderBy, where } from 'firebase/firestore';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { fns } from '@/lib/firebase';
 import { paths } from '@/lib/firebase/paths';
 import { useCollectionQuery, useDocQuery } from '@/hooks/useFirestoreQuery';

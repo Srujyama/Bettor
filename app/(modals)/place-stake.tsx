@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Pill, Screen, Txt } from '@/components/ui';
 import { HoldToConfirm, OutcomePicker, StakeSlider } from '@/components/domain';
 import { usePlaceBet } from '@/features/bets/mutations';

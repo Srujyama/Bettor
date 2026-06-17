@@ -8,7 +8,7 @@ import { Share, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Avatar, Button, Card, EmptyState, Pill, Screen, Txt } from '@/components/ui';
 import { BetCard } from '@/components/domain';
 import { useGroup, useGroupBets } from '@/hooks/data';

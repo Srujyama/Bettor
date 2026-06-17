@@ -7,7 +7,7 @@
  * Social track's `useInventory`; here we only invalidate its query key on change.
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { fns } from '@/lib/firebase';
 import { formatChips } from '@/shared/money';
 import { COSMETIC_BY_KEY, POWERUP_BY_KEY, PRO } from '@/shared/gamification';

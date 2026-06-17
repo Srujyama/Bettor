@@ -10,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Screen, Txt, Button } from '@/components/ui';
 import { colors } from '@/theme';
 

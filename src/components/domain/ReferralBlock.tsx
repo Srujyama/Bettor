@@ -6,7 +6,7 @@
  */
 import { Share, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Button, Card, Txt } from '@/components/ui';
 import { colors } from '@/theme';
 

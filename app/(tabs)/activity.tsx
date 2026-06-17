@@ -68,7 +68,7 @@ export default function ActivityScreen() {
       <FlashList
         data={notifications ?? []}
         keyExtractor={(n: AppNotification) => n.notifId}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 110 }}
         renderItem={({ item }) => (
           <ActivityRow
             emoji={notificationEmoji(item.type)}

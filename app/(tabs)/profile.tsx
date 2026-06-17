@@ -84,7 +84,7 @@ export default function ProfileScreen() {
           ),
         }}
       />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 110, gap: 16 }}>
         <ProfileHeader user={user} />
 
         {/* Play hub: level + entry points to season/missions/achievements/shop */}

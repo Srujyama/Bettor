@@ -5,7 +5,7 @@
  * Sending goes through fns.sendChat (rate-limited + member-only server-side).
  * Reads are live via useCrewChat / useInventory.
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -42,6 +42,16 @@ export default function CrewChatScreen() {
   const myUid = me?.uid ?? '';
   const ordered = useMemo(() => messages ?? [], [messages]);
 
+  // Keep the view pinned to the newest message as the thread grows.
+  // (ref typed loosely — only used for the imperative scrollToEnd call.)
+  const listRef = useRef<{ scrollToEnd: (o?: { animated?: boolean }) => void } | null>(null);
+  useEffect(() => {
+    if (ordered.length > 0) {
+      const t = setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 60);
+      return () => clearTimeout(t);
+    }
+  }, [ordered.length]);
+
   const sendText = () => {
     const trimmed = text.trim();
     if (!groupId || trimmed.length === 0) return;
@@ -69,14 +79,15 @@ export default function CrewChatScreen() {
   const toggleTray = (t: Tray) => setTray((cur) => (cur === t ? 'none' : t));
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={[]}>
       <Stack.Screen options={{ title: group?.name ? `${group.emoji ?? '💬'} ${group.name}` : 'Crew chat' }} />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       >
         <FlashList
+          ref={listRef as never}
           data={ordered}
           keyExtractor={(m) => m.messageId}
           contentContainerStyle={{ paddingHorizontal: 12, paddingVertical: 12 }}

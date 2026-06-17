@@ -9,7 +9,7 @@ import { Pressable, View } from 'react-native';
 import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { FirebaseError } from 'firebase/app';
 import { Screen, Txt, Button, Input } from '@/components/ui';
 import { authService } from '@/lib/firebase';

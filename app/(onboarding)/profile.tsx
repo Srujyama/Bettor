@@ -16,7 +16,7 @@ import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useMutation } from '@tanstack/react-query';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Screen, Txt, Button, Input, Avatar } from '@/components/ui';
 import { colors } from '@/theme';
 import {

@@ -93,7 +93,7 @@ export default function AccountSettings() {
 
         <Button label="Sign out" tone="danger" loading={signingOut} onPress={confirmSignOut} />
 
-        <Txt variant="caption" muted className="text-center" style={{ color: colors.textFaint }}>
+        <Txt variant="caption" muted className="text-center">
           {user?.uid ? `User ID ${user.uid}` : ''}
         </Txt>
       </ScrollView>

@@ -21,7 +21,7 @@ function rankTone(rank: number): string {
   if (rank === 1) return colors.gold;
   if (rank === 2) return colors.textDim;
   if (rank === 3) return colors.goldDeep;
-  return colors.faint;
+  return colors.muted;
 }
 
 export function LeaderboardRow({ row, highlight, onPress }: Props) {

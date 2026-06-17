@@ -16,7 +16,7 @@ import {
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { Screen, Txt, Button } from '@/components/ui';
 import { colors, gradients } from '@/theme';
 import { NO_CASH_VALUE_DISCLOSURE } from '@/shared/constants';

@@ -6,7 +6,7 @@
  */
 import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { fns, getDocOnce, updateDocData, serverTimestamp } from '@/lib/firebase';
 import { paths } from '@/lib/firebase/paths';
 import { useSession } from '@/stores/session';

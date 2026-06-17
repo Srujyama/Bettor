@@ -7,7 +7,7 @@
  * validated payload and reads back server-written state via the live reads.
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { fns } from '@/lib/firebase';
 import {
   CreateParlayPayloadSchema,

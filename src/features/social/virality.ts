@@ -10,7 +10,7 @@
  * expansion coordination rules; this file assumes those wrappers exist.
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'burnt';
+import { toast } from '@/lib/toast';
 import { fns } from '@/lib/firebase';
 
 function errorMessage(e: unknown): string {

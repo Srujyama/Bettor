@@ -4,6 +4,11 @@
 module.exports = {
   content: ['./app/**/*.{js,jsx,ts,tsx}', './src/**/*.{js,jsx,ts,tsx}'],
   presets: [require('nativewind/preset')],
+  // Class-based dark mode. The app is dark-first (userInterfaceStyle: 'dark'),
+  // so we don't want NativeWind's web runtime reacting to the OS `media` query —
+  // which throws "Cannot manually set color scheme" on web. 'class' is inert
+  // here (we never toggle a light theme) and keeps web from crashing.
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
