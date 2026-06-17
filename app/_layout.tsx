@@ -167,10 +167,17 @@ function RouteGuard({
 }) {
   const tutorialDone = useOnboarding((s) => s.tutorialDone);
   const ageAcknowledged = useOnboarding((s) => s.ageAcknowledged);
+  const devBypass = useOnboarding((s) => s.devBypass);
+
+  // DEV-ONLY: a local flag set from the age gate's "Skip (dev)" button lets you
+  // into the app when the backend (verifyAge) is unreachable. Never in prod.
+  // TODO(chipd): remove when age verification is reliable end-to-end.
+  const devBypassActive = __DEV__ && devBypass;
 
   if (!booted || status === 'loading') return <SplashOverlay />;
   if (status === 'unauthenticated') return <Redirect href="/(auth)" />;
-  if (!isOnboarded(profile)) return <Redirect href="/(onboarding)/age-gate" />;
+  if (!isOnboarded(profile) && !devBypassActive)
+    return <Redirect href="/(onboarding)/age-gate" />;
   // Onboarded. If this device is mid-flow, don't yank the user to the tabs —
   // let the onboarding screens finish driving navigation themselves.
   if (ageAcknowledged && !tutorialDone) return null;

@@ -11,12 +11,14 @@ import { Button, Card, Input, Screen, Txt } from '@/components/ui';
 import { colors } from '@/theme';
 import { authService } from '@/lib/firebase';
 import { useSession } from '@/stores/session';
+import { useOnboarding } from '@/stores/ui';
 import { useCurrentUser } from '@/hooks/data';
 import { useUpdateProfile } from '@/features/social/hooks';
 
 export default function AccountSettings() {
   const router = useRouter();
   const resetSession = useSession((s) => s.reset);
+  const setDevBypass = useOnboarding((s) => s.setDevBypass);
   const { data: user } = useCurrentUser();
   const updateProfile = useUpdateProfile();
 
@@ -44,6 +46,7 @@ export default function AccountSettings() {
     try {
       await authService.signOut();
       resetSession();
+      setDevBypass(false); // clear the dev onboarding bypass on sign-out
       router.replace('/(auth)');
     } catch {
       setSigningOut(false);

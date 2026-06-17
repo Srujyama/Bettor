@@ -42,9 +42,18 @@ interface OnboardingState {
   ageAcknowledged: boolean;
   rgConsented: boolean;
   tutorialDone: boolean;
+  /**
+   * DEV-ONLY escape hatch. When true (and only in __DEV__), the root RouteGuard
+   * treats the user as onboarded so you can reach the app even if the backend
+   * (e.g. verifyAge) isn't reachable. NEVER honored in production builds.
+   * TODO(chipd): remove once age verification is reliable end-to-end and a real
+   * staging backend is wired — this exists only to unblock UI testing.
+   */
+  devBypass: boolean;
   setAgeAcknowledged: (v: boolean) => void;
   setRgConsented: (v: boolean) => void;
   setTutorialDone: (v: boolean) => void;
+  setDevBypass: (v: boolean) => void;
 }
 
 export const useOnboarding = create<OnboardingState>()(
@@ -53,9 +62,11 @@ export const useOnboarding = create<OnboardingState>()(
       ageAcknowledged: false,
       rgConsented: false,
       tutorialDone: false,
+      devBypass: false,
       setAgeAcknowledged: (ageAcknowledged) => set({ ageAcknowledged }),
       setRgConsented: (rgConsented) => set({ rgConsented }),
       setTutorialDone: (tutorialDone) => set({ tutorialDone }),
+      setDevBypass: (devBypass) => set({ devBypass }),
     }),
     { name: 'chipd-onboarding', storage: createJSONStorage(() => AsyncStorage) },
   ),

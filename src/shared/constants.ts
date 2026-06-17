@@ -154,8 +154,13 @@ export type LedgerReason = (typeof LEDGER_REASON)[keyof typeof LEDGER_REASON];
 export const LEDGER_DIRECTION = { CREDIT: 'credit', DEBIT: 'debit' } as const;
 export type LedgerDirection = (typeof LEDGER_DIRECTION)[keyof typeof LEDGER_DIRECTION];
 
-/** The fixed system account that all grants and rake flow through. */
-export const HOUSE_UID = '__house__' as const;
+/**
+ * The fixed system account that all grants and rake flow through.
+ * NOTE: must NOT be wrapped in double underscores — Firestore reserves any
+ * document id matching `__.*__`, which would make every ledger write to the
+ * house account fail with INVALID_ARGUMENT.
+ */
+export const HOUSE_UID = 'house_account' as const;
 
 /** Windows. */
 export const TIMING = {

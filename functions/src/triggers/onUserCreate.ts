@@ -132,7 +132,7 @@ async function ensureHouseAccount(): Promise<void> {
     {
       uid: HOUSE_UID,
       displayName: 'House',
-      handle: '__house__',
+      handle: 'house',
       chipsBalance: 0,
       chipsHeld: 0,
       ledgerVersion: 0,

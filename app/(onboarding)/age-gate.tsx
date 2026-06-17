@@ -40,6 +40,22 @@ function computeAge(d: number, m: number, y: number, now = Date.now()): number {
 
 export default function AgeGate() {
   const setAgeAcknowledged = useOnboarding((s) => s.setAgeAcknowledged);
+  const setTutorialDone = useOnboarding((s) => s.setTutorialDone);
+  const setDevBypass = useOnboarding((s) => s.setDevBypass);
+
+  // DEV-ONLY escape hatch — see the button at the bottom of this screen.
+  // TODO(chipd): remove once age verification works reliably end-to-end.
+  const devSkip = () => {
+    setAgeAcknowledged(true);
+    setTutorialDone(true);
+    setDevBypass(true);
+    toast({
+      title: 'Dev skip — onboarding bypassed',
+      message: 'Backend age verification was skipped. This must not ship.',
+      preset: 'none',
+    });
+    router.replace('/(tabs)');
+  };
 
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
@@ -165,6 +181,25 @@ export default function AgeGate() {
           {'\n'}
           {NO_CASH_VALUE_DISCLOSURE}
         </Txt>
+
+        {/* DEV-ONLY skip — stripped from production builds via __DEV__. Lets you
+            into the app for UI testing when the backend is unreachable.
+            TODO(chipd): remove once age verification is reliable end-to-end. */}
+        {__DEV__ ? (
+          <View className="mb-2 mt-4 items-center">
+            <Button
+              label="⚠︎ Skip onboarding (dev only)"
+              tone="ghost"
+              size="sm"
+              fullWidth={false}
+              haptic={false}
+              onPress={devSkip}
+            />
+            <Txt variant="caption" muted className="mt-1 text-center">
+              Dev build only · bypasses real age verification · not in production
+            </Txt>
+          </View>
+        ) : null}
       </View>
     </Screen>
   );

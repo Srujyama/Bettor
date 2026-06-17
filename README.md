@@ -93,6 +93,9 @@ Beyond the core lifecycle, Chipd now includes:
 
 ---
 
+## ⛏️ TECH DEBT — must be done before any real release
+- 🚧 **Remove the dev-only onboarding skip.** The age gate has a `⚠︎ Skip onboarding (dev only)` button (and a `devBypass` flag in the onboarding store + an `__DEV__` branch in the root `RouteGuard`). It bypasses **server age verification** so the app is testable when the backend is unreachable. It is stripped from production by `__DEV__`, but **delete it entirely** (`app/(onboarding)/age-gate.tsx` `devSkip`, `src/stores/ui.ts` `devBypass`, `app/_layout.tsx` `devBypassActive`) once age verification is reliable end-to-end. Search the codebase for `TODO(chipd)` / `devBypass`.
+
 ## Status & known follow-ups
 - ✅ Builds clean: iOS + Android Metro bundles (2,500+ modules), `tsc` 0 errors, **57 Cloud Functions** load in the emulator, **41/41 app tests** + **63/63 backend integrity tests** pass. 65 screens, 42 domain components.
 - 🔒 **Integrity test suite** (`cd functions && npm run test:rules`): Firestore-rules tests prove clients can't write money/ledger/settlement; a real emulator-backed double-spend test proves concurrent `placeBet` can't overspend; money-conservation property tests over thousands of random books.
