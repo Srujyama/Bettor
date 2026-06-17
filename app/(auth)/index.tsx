@@ -107,31 +107,66 @@ export default function Welcome() {
           </Txt>
         </View>
 
-        {/* Value carousel */}
+        {/* Value carousel — fixed-height pager so slides don't collapse and the
+            layout doesn't scatter. Each slide is exactly `width` wide; inner
+            content is centered and padded so long titles wrap instead of
+            overflowing the screen edge. */}
         <View className="flex-1 justify-center">
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={onScroll}
-            scrollEventThrottle={16}
-          >
-            {SLIDES.map((s) => (
-              <View key={s.title} style={{ width }} className="items-center px-8">
-                <Txt style={{ fontSize: 72 }}>{s.emoji}</Txt>
-                <Txt variant="title" className="mt-6 text-center">
-                  {s.title}
-                </Txt>
-                <Txt variant="body" dim className="mt-3 text-center leading-6">
-                  {s.body}
-                </Txt>
-              </View>
-            ))}
-          </ScrollView>
+          <View style={{ height: 300 }}>
+            <ScrollView
+              ref={scrollRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={onScroll}
+              scrollEventThrottle={16}
+            >
+              {SLIDES.map((s) => (
+                // Each slide is exactly the screen width with 32px horizontal
+                // padding. align-items:stretch (default) makes the text children
+                // fill width-64 and WRAP, instead of overflowing the page edge.
+                <View
+                  key={s.title}
+                  style={{ width, paddingHorizontal: 32 }}
+                  className="justify-center"
+                >
+                  <Txt style={{ fontSize: 60, lineHeight: 76, textAlign: 'center' }}>
+                    {s.emoji}
+                  </Txt>
+                  <Txt
+                    numberOfLines={2}
+                    style={{
+                      width: width - 64,
+                      marginTop: 20,
+                      textAlign: 'center',
+                      color: colors.text,
+                      fontSize: 26,
+                      fontWeight: '700',
+                      lineHeight: 32,
+                    }}
+                  >
+                    {s.title}
+                  </Txt>
+                  <Txt
+                    dim
+                    numberOfLines={3}
+                    style={{
+                      width: width - 64,
+                      marginTop: 12,
+                      textAlign: 'center',
+                      fontSize: 15,
+                      lineHeight: 22,
+                    }}
+                  >
+                    {s.body}
+                  </Txt>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
 
           {/* Dots */}
-          <View className="mt-8 flex-row justify-center gap-2">
+          <View className="mt-6 flex-row justify-center gap-2">
             {SLIDES.map((_, i) => (
               <View
                 key={i}

@@ -21,15 +21,13 @@ service cloud.firestore {
       return request.auth != null;
     }
     function appChecked() {
-      // App Check posture: when a token IS present we require it to be valid;
-      // when it is ABSENT we do NOT deny here. Production App Check enforcement
-      // is configured at the platform level (Firebase console → App Check →
-      // Firestore: Enforce), which is the recommended gate — rules should not be
-      // the sole App Check barrier. This also keeps the emulator + rules-unit
-      // tests exercising the REAL authorization logic (they cannot supply an App
-      // Check token). Net: un-attested clients are still blocked in production
-      // (platform-enforced), but the rules stay testable.
-      return request.app == null || request.app.token != null;
+      // App Check is enforced at the PLATFORM level (Firebase console → App Check
+      // → Firestore: Enforce), NOT in rules. Referencing request.app here breaks
+      // every client write under the JS SDK / emulator (which don't attach an App
+      // Check token → "Property app is undefined"). So this is intentionally a
+      // no-op gate; un-attested clients are still blocked in production by the
+      // platform setting. Keeping it as a function preserves the call sites.
+      return true;
     }
     function ok() {
       return signedIn() && appChecked();

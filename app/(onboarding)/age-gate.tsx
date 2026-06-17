@@ -60,7 +60,8 @@ export default function AgeGate() {
   const [day, setDay] = useState('');
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
-  const monthRef = useRef<TextInput>(null);
+  // Inputs are ordered Month → Day → Year; refs advance focus along that order.
+  const dayRef = useRef<TextInput>(null);
   const yearRef = useRef<TextInput>(null);
 
   const dNum = parseInt(day, 10) || 0;
@@ -113,23 +114,23 @@ export default function AgeGate() {
           </Txt>
           <View className="flex-row gap-3">
             <DobBox
-              placeholder="DD"
-              value={day}
-              maxLength={2}
-              onChangeText={(v) => {
-                const clean = v.replace(/[^0-9]/g, '');
-                setDay(clean);
-                if (clean.length === 2) monthRef.current?.focus();
-              }}
-            />
-            <DobBox
-              ref={monthRef}
               placeholder="MM"
               value={month}
               maxLength={2}
               onChangeText={(v) => {
                 const clean = v.replace(/[^0-9]/g, '');
                 setMonth(clean);
+                if (clean.length === 2) dayRef.current?.focus();
+              }}
+            />
+            <DobBox
+              ref={dayRef}
+              placeholder="DD"
+              value={day}
+              maxLength={2}
+              onChangeText={(v) => {
+                const clean = v.replace(/[^0-9]/g, '');
+                setDay(clean);
                 if (clean.length === 2) yearRef.current?.focus();
               }}
             />
