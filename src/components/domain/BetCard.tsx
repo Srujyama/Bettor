@@ -6,7 +6,6 @@
  * tap fires onPress(betId).
  */
 import { Pressable, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import {
@@ -17,7 +16,7 @@ import {
   TwoSidedBar,
   Txt,
 } from '@/components/ui';
-import { colors, gradients, categoryColor } from '@/theme';
+import { colors, categoryColor } from '@/theme';
 import { formatChips } from '@/shared/money';
 import { BET_STATUS, type BetStatus } from '@/shared/constants';
 import type { Bet, BetEntry } from '@/shared/schemas';
@@ -77,14 +76,16 @@ export function BetCard({ bet, myEntry, onPress }: Props) {
         onPressOut={() => (scale.value = withSpring(1, { damping: 16 }))}
         accessibilityRole="button"
       >
-        {/* Foil-gradient hairline frame */}
-        <LinearGradient
-          colors={gradients.foil}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={{ borderRadius: 21, padding: 1 }}
-        >
-          <View className="gap-3 rounded-card bg-surface p-4">
+        {/* Matte card: flat surface + hairline border + one solid category
+            accent stripe down the left edge (replaces the old foil-gradient
+            rainbow frame, which read glossy, not matte). */}
+        <View className="relative overflow-hidden gap-3 rounded-card border border-hairline bg-surface p-4">
+          <View
+            style={{ backgroundColor: accent }}
+            className="absolute left-0 top-0 bottom-0 w-1"
+          />
+          {/* pad the content clear of the accent bar */}
+          <View className="gap-3 pl-1">
             {/* Header: category + status, ring on the right */}
             <View className="flex-row items-start gap-3">
               <View className="flex-1 gap-2">
@@ -122,7 +123,7 @@ export function BetCard({ bet, myEntry, onPress }: Props) {
               <TwoSidedBar segments={segments} mySide={myEntry?.outcomeId ?? null} height={10} />
             </View>
           </View>
-        </LinearGradient>
+        </View>
       </Pressable>
     </Animated.View>
   );

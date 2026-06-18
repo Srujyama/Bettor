@@ -1,17 +1,18 @@
 import { ActivityIndicator, Pressable, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Txt } from './Text';
-import { gradients, colors } from '@/theme';
+import { colors } from '@/theme';
 
 type Tone = 'jade' | 'coral' | 'gold' | 'royal' | 'ghost' | 'danger';
 
-const TONE_GRADIENT: Record<string, readonly [string, string]> = {
-  jade: gradients.jade,
-  coral: gradients.coral,
-  gold: gradients.gold,
-  royal: gradients.royal,
+// Matte: solid fills, not glossy gradients. A flat, confident block of color
+// reads bolder than a sheen. Filled tones use dark ink text for crisp contrast.
+const TONE_FILL: Record<string, string> = {
+  jade: colors.jade,
+  coral: colors.coral,
+  gold: colors.gold,
+  royal: colors.royal,
 };
 
 interface Props {
@@ -44,7 +45,7 @@ export function Button({
 
   const padding = size === 'lg' ? 'py-4 px-6' : size === 'sm' ? 'py-2 px-3' : 'py-3.5 px-5';
   const textVariant = size === 'sm' ? 'label' : 'heading';
-  const isGradient = tone !== 'ghost' && tone !== 'danger';
+  const isFilled = tone !== 'ghost' && tone !== 'danger';
   const off = disabled || loading;
 
   const handlePress = () => {
@@ -63,7 +64,7 @@ export function Button({
           <Txt
             variant={textVariant}
             className={
-              isGradient
+              isFilled
                 ? 'text-ink'
                 : tone === 'danger'
                   ? 'text-coral'
@@ -87,16 +88,13 @@ export function Button({
         style={{ opacity: off ? 0.5 : 1 }}
         className={className}
       >
-        {isGradient ? (
-          <LinearGradient
-            colors={TONE_GRADIENT[tone]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+        {isFilled ? (
+          <View
             className={`rounded-chip ${padding}`}
-            style={{ borderRadius: 12 }}
+            style={{ backgroundColor: TONE_FILL[tone] }}
           >
             {content}
-          </LinearGradient>
+          </View>
         ) : (
           <View
             className={`rounded-chip ${padding} ${

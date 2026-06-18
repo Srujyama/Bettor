@@ -6,10 +6,9 @@
  * doc + the two display identities come in via props.
  */
 import { View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Avatar, ChipCounter, Pill, Txt } from '@/components/ui';
 import { HeadToHeadBar } from './HeadToHeadBar';
-import { colors, gradients } from '@/theme';
+import { colors } from '@/theme';
 import type { Rivalry } from '@/shared/schemas-ext';
 
 interface Identity {
@@ -37,14 +36,8 @@ export function RivalryCard({ rivalry, me, them }: Props) {
   const tied = myNet === 0;
 
   return (
-    <LinearGradient
-      colors={gradients.foil}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{ borderRadius: 21, padding: 1 }}
-    >
-      <View className="gap-4 rounded-card bg-surface p-4">
-        {/* Face-off */}
+    <View className="gap-4 rounded-card border border-hairline bg-surface p-4">
+      {/* Face-off */}
         <View className="flex-row items-center justify-between">
           <View className="items-center gap-1">
             <Avatar uri={me.photoURL} name={me.name} size={52} ring />
@@ -97,7 +90,6 @@ export function RivalryCard({ rivalry, me, them }: Props) {
             />
           )}
         </View>
-      </View>
-    </LinearGradient>
+    </View>
   );
 }

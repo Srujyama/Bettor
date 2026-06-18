@@ -19,19 +19,23 @@ export const radius = {
 } as const;
 
 /** Layered shadow presets (iOS). */
+// Matte: elevation comes from surface-step + hairline borders, not glow. Cards
+// carry no shadow at all; only genuinely-floating chrome (the FAB, modals) gets
+// a soft, low-opacity shadow so it lifts off the page without looking glossy.
 export const shadow = {
   card: {
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
+    // Flat — matte cards lift via their lighter surface + hairline, not a halo.
+    shadowColor: 'transparent',
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 0,
   },
   float: {
     shadowColor: '#000',
-    shadowOpacity: 0.45,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 12,
+    shadowOpacity: 0.22,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
 } as const;
