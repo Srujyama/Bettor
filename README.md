@@ -78,6 +78,15 @@ See **[SETUP.md](./SETUP.md)** for the full checklist.
 - **Wallet** — balance, daily Chips, free refill at zero, full ledger
 - **Leaderboard · Crews (groups) · Settings · Responsible Gaming (limits, self-exclusion, reality checks, "My Activity")**
 
+## The "gambling society" layer (Kalshi-style + casino, Chips-only)
+A second wave that makes the app habit-forming for *everyone*, not just friend groups — all settled in virtual Chips (no cash):
+- **📈 Prediction markets** — Kalshi/Polymarket-style **YES/NO markets** with a real **LMSR automated market maker** (live cents pricing, price impact, buy/sell shares, P/L, a price chart). Create a market on anything; trade in one tap. Server-authoritative pricing + a bounded house subsidy keep Chips conservable.
+- **🎰 Casino mini-games** — **slots, wheel of fortune, scratch cards, coin flip, and crash**, each **provably fair** (server-seed commit/reveal + client seed + nonce, verifiable) with house-edge payout tables (every game's RTP < 1, proven in tests). Juicy Reanimated reels/wheel/scratch/crash-curve + big-win overlays.
+- **🔥 Hyper-engagement loops** — **hourly Chip drops** with an escalating streak + FOMO countdown, **variable-reward chests**, a **daily free spin**, a **streak meter**, near-miss animations, and a `recordActivity` day-streak.
+- **📱 Discovery feed** — a full-screen **TikTok-style vertical pager** ("Hot" tab) of live markets, joinable bets, and big-win highlights, with one-tap quick-trade / quick-bet bottom sheets so you never leave the feed.
+
+The casino/markets math lives in tested pure modules (`src/shared/markets.ts`, `casino.ts`, `engagement.ts`); every payout flows through the same double-entry ledger as the rest of the app, funded from the house account.
+
 ## Rich feature set (expansion)
 Beyond the core lifecycle, Chipd now includes:
 - **Gamification** — XP & levels (with a level-up Chip reward curve), an achievements gallery (22 badges across bronze→platinum, incl. secret ones), daily & weekly **missions/quests**, competitive **seasons** with placement rewards & standings, and a swipeable **"Chipd Wrapped"** stats recap with a shareable card.
@@ -97,7 +106,7 @@ Beyond the core lifecycle, Chipd now includes:
 - 🚧 **Remove the dev-only onboarding skip.** The age gate has a `⚠︎ Skip onboarding (dev only)` button (and a `devBypass` flag in the onboarding store + an `__DEV__` branch in the root `RouteGuard`). It bypasses **server age verification** so the app is testable when the backend is unreachable. It is stripped from production by `__DEV__`, but **delete it entirely** (`app/(onboarding)/age-gate.tsx` `devSkip`, `src/stores/ui.ts` `devBypass`, `app/_layout.tsx` `devBypassActive`) once age verification is reliable end-to-end. Search the codebase for `TODO(chipd)` / `devBypass`.
 
 ## Status & known follow-ups
-- ✅ Builds clean: iOS + Android Metro bundles (2,500+ modules), `tsc` 0 errors, **57 Cloud Functions** load in the emulator, **41/41 app tests** + **63/63 backend integrity tests** pass. 65 screens, 42 domain components.
+- ✅ Builds clean: iOS + Android Metro bundles (2,500+ modules), `tsc` 0 errors, **67 Cloud Functions** load in the emulator, **64 shared tests** + **63 backend integrity tests** pass. 91 screens, 72 domain components.
 - 🔒 **Integrity test suite** (`cd functions && npm run test:rules`): Firestore-rules tests prove clients can't write money/ledger/settlement; a real emulator-backed double-spend test proves concurrent `placeBet` can't overspend; money-conservation property tests over thousands of random books.
 - 🤖 **CI** (`.github/workflows/ci.yml`): typecheck + tests + Metro bundle (iOS/Android) + functions build + rules tests + a **compliance gate** that fails the build if a real-money/cash-out path appears or `IS_REAL_MONEY` isn't `false`.
 - ⚙️ Runtime wiring live: push registration + deep-link tap routing, the responsible-gaming reality check fires on a session tick, missions seed on app open, template/rematch prefill flows into the create wizard, win celebrations share a card, notification read-state persists.

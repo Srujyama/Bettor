@@ -63,6 +63,21 @@ export const paths = {
   rivalry: (pairId: string) => `rivalries/${pairId}`,
   crewChat: (groupId: string) => `groups/${groupId}/chat`,
   crewChatMessage: (groupId: string, messageId: string) => `groups/${groupId}/chat/${messageId}`,
+
+  // ─── Mega-feature collections (Markets track owns these path builders) ───
+  // Prediction markets (Kalshi-style)
+  markets: () => `markets`,
+  market: (marketId: string) => `markets/${marketId}`,
+  marketPositions: (marketId: string) => `markets/${marketId}/positions`,
+  marketPosition: (marketId: string, uid: string) => `markets/${marketId}/positions/${uid}`,
+  marketTrades: (marketId: string) => `markets/${marketId}/trades`,
+  marketTrade: (marketId: string, tradeId: string) => `markets/${marketId}/trades/${tradeId}`,
+  // Casino game rounds (per-user)
+  gameRounds: (uid: string) => `users/${uid}/gameRounds`,
+  gameRound: (uid: string, roundId: string) => `users/${uid}/gameRounds/${roundId}`,
+  // Discovery feed
+  discovery: () => `discovery`,
+  discoveryItem: (itemId: string) => `discovery/${itemId}`,
 } as const;
 
 /** Stable, order-independent rivalry pair id from two uids. */

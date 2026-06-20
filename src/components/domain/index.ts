@@ -53,3 +53,43 @@ export { SquaresGrid } from './SquaresGrid';
 export { BracketView } from './BracketView';
 export { TemplateCard } from './TemplateCard';
 export { MultiplierBadge } from './MultiplierBadge';
+
+// ── Prediction markets (Markets track) ──
+export { MarketCard } from './MarketCard';
+export { YesNoPriceBar } from './YesNoPriceBar';
+export { OrderTicket } from './OrderTicket';
+export { PriceChart } from './PriceChart';
+export { PositionRow } from './PositionRow';
+export { MarketSparkline } from './MarketSparkline';
+
+// ── Discovery feed (Discovery track) ──
+export { FeedPager } from './FeedPager';
+export type { FeedEntry } from './FeedPager';
+export { FeedMarketCard } from './FeedMarketCard';
+export { FeedBetCard } from './FeedBetCard';
+export { FeedWinCard } from './FeedWinCard';
+export { TrendingRail } from './TrendingRail';
+export { HotBadge } from './HotBadge';
+export { QuickTradeSheet } from './QuickTradeSheet';
+export type { QuickTradeSheetRef } from './QuickTradeSheet';
+export { QuickBetSheet } from './QuickBetSheet';
+export type { QuickBetSheetRef } from './QuickBetSheet';
+
+// ── Casino mini-games (Casino track) ──
+export { SlotReels } from './SlotReels';
+export { WheelOfFortune } from './WheelOfFortune';
+export { ScratchCard } from './ScratchCard';
+export { CoinFlip3D } from './CoinFlip3D';
+export { CrashGraph } from './CrashGraph';
+export { BigWinOverlay } from './BigWinOverlay';
+export { GameStakeBar } from './GameStakeBar';
+export { ProvablyFairBadge } from './ProvablyFairBadge';
+
+// ── Hyper-engagement loops (Engagement track) ──
+export { HourlyDropTimer } from './HourlyDropTimer';
+export { StreakMeter } from './StreakMeter';
+export { ChestOpen } from './ChestOpen';
+export { DailySpinDial } from './DailySpinDial';
+export { NearMissPulse } from './NearMissPulse';
+export { FomoBadge } from './FomoBadge';
+export { RewardChest } from './RewardChest';

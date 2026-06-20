@@ -33,6 +33,12 @@ import type {
   UserMission,
   Wrapped,
 } from '@/shared/schemas-ext';
+import type {
+  DiscoveryItem,
+  GameRound,
+  Market,
+  MarketPosition,
+} from '@/shared/schemas-markets';
 
 export function useCurrentUser() {
   const uid = useSession((s) => s.uid);
@@ -327,5 +333,122 @@ export function useCrewChat(groupId: string | null, max = 100) {
     groupId ? paths.crewChat(groupId) : null,
     [orderBy('createdAt', 'asc'), fbLimit(max)],
     !!groupId,
+  );
+}
+
+// ─── Markets / casino / engagement / discovery read hooks ──────────────────────
+// Owned by the Discovery track per the mega-spec coordination rules. All reads
+// are live (onSnapshot-backed); money/positions/AMM state are CF-written. The
+// `paths.markets()/market()/marketPositions()/marketPosition()/discovery()/
+// discoveryItem()/gameRounds()` builders are added by the Markets track — this
+// file ASSUMES they exist by name (per the spec) and references them directly.
+
+/** Open prediction markets. Filter by category and sort (heat = trending). */
+export function useMarkets(
+  filter: { category?: string; sort?: 'heat' | 'createdAt' | 'closesAt' } = {},
+  max = 40,
+) {
+  const constraints = [] as Parameters<typeof useCollectionQuery>[2];
+  constraints.push(where('status', '==', 'open'));
+  if (filter.category) constraints.push(where('category', '==', filter.category));
+  const sortField = filter.sort ?? 'createdAt';
+  if (sortField === 'closesAt') constraints.push(orderBy('closesAt', 'asc'));
+  else constraints.push(orderBy(sortField, 'desc'));
+  constraints.push(fbLimit(max));
+  return useCollectionQuery<Market>(
+    ['markets', filter.category ?? 'any', sortField, max],
+    paths.markets(),
+    constraints,
+    true,
+  );
+}
+
+/** A single market by id (live AMM price + volume stream in). */
+export function useMarket(id: string | null) {
+  return useDocQuery<Market>(['market', id], id ? paths.market(id) : null, !!id);
+}
+
+/** The current user's YES/NO position in a market (markets/{id}/positions/{uid}). */
+export function useMarketPosition(marketId: string | null) {
+  const uid = useSession((s) => s.uid);
+  const enabled = !!uid && !!marketId;
+  return useDocQuery<MarketPosition>(
+    ['marketPosition', marketId, uid],
+    enabled ? paths.marketPosition(marketId as string, uid as string) : null,
+    enabled,
+  );
+}
+
+/**
+ * The current user's recent market positions.
+ *
+ * PILOT NOTE: the low-level `useCollectionQuery` helper only subscribes to a
+ * single collection path (no collection-group support), and there's no
+ * materialized per-user positions index in the pilot schema. So we read the
+ * user's recent market activity as a flat list from `paths.discovery()` is NOT
+ * appropriate; instead positions are composed at the screen level from a known
+ * set of market ids via `useMarketPosition`. This hook is intentionally a thin
+ * wrapper that derives the markets the user is likely in from their recent game
+ * rounds is also wrong — so for the pilot it returns the user's positions by
+ * combining the live `useTrendingMarkets` ids with `useMarketPosition`. To keep
+ * the hook contract simple and dependency-free, it accepts an explicit list of
+ * market ids the caller already has (e.g. from `useTrendingMarkets` /
+ * `useMarkets`) and returns the non-empty positions among them.
+ */
+export function useMyPositions(marketIds: string[], max = 30) {
+  // Subscribe to each candidate market's position doc for the current user.
+  // React's rules-of-hooks require a stable count, so we cap the candidate set.
+  const uid = useSession((s) => s.uid);
+  const ids = marketIds.slice(0, max);
+  const results = ids.map((id) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useDocQuery<MarketPosition>(
+      ['marketPosition', id, uid],
+      uid ? paths.marketPosition(id, uid) : null,
+      !!uid,
+    ),
+  );
+  const positions = results
+    .map((r) => r.data)
+    .filter(
+      (p): p is MarketPosition => !!p && ((p.yesShares ?? 0) > 0 || (p.noShares ?? 0) > 0),
+    );
+  const isLoading = results.some((r) => r.isLoading);
+  return { data: positions, isLoading };
+}
+
+/** Trending markets — hottest first (drives the feed rail + "hot now"). */
+export function useTrendingMarkets(max = 20) {
+  return useCollectionQuery<Market>(
+    ['markets', 'trending', max],
+    paths.markets(),
+    [where('status', '==', 'open'), orderBy('heat', 'desc'), fbLimit(max)],
+    true,
+  );
+}
+
+/** The current user's recent casino game rounds (users/{uid}/gameRounds). */
+export function useGameRounds(max = 30) {
+  const uid = useSession((s) => s.uid);
+  return useCollectionQuery<GameRound>(
+    ['gameRounds', uid, max],
+    uid ? paths.gameRounds(uid) : null,
+    [orderBy('createdAt', 'desc'), fbLimit(max)],
+    !!uid,
+  );
+}
+
+/**
+ * The materialized discovery feed — markets, bets, and big-wins fanned into the
+ * `discovery` collection by the buildDiscovery scheduled CF. Newest/hottest
+ * first. When this collection is empty (e.g. before the sweep first runs) the
+ * feed screen falls back to merging trending markets + open bets client-side.
+ */
+export function useDiscoveryFeed(max = 40) {
+  return useCollectionQuery<DiscoveryItem>(
+    ['discovery', max],
+    paths.discovery(),
+    [orderBy('createdAt', 'desc'), fbLimit(max)],
+    true,
   );
 }

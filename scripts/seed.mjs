@@ -208,7 +208,41 @@ async function main() {
     }, { merge: true });
   }
 
-  console.log(`✓ Seeded ${DEMO.length} users, ${BETS.length} bets, 1 season, ${FIXTURES.length} fixtures.`);
+  // ── Prediction markets (Kalshi-style) + discovery feed ──
+  const MARKETS = [
+    { id: 'mkt_rain', q: 'Will it rain in Macau this weekend?', cat: 'weather', yes: 62 },
+    { id: 'mkt_lakers', q: 'Will the Lakers make the playoffs?', cat: 'sports', yes: 44 },
+    { id: 'mkt_btc', q: 'Will Bitcoin top $150k this year?', cat: 'custom', yes: 31 },
+    { id: 'mkt_late', q: 'Will Sara be late to dinner Friday?', cat: 'social', yes: 78 },
+  ];
+  for (const m of MARKETS) {
+    const b = 2886; // liquidityForSeed(2000)
+    // qYes/qNo chosen so priceYesCents ≈ m.yes (b*ln(p/(1-p)) imbalance)
+    const imbalance = Math.round(b * Math.log(m.yes / (100 - m.yes)));
+    await db.doc(`markets/${m.id}`).set({
+      marketId: m.id, creatorUid: DEMO[0].uid, creatorName: DEMO[0].name,
+      question: m.q, description: '', category: m.cat, imageUrl: null,
+      qYes: Math.max(0, imbalance), qNo: Math.max(0, -imbalance), b,
+      priceYesCents: m.yes, volume: 1500 + Math.floor(Math.random() * 8000),
+      traderCount: 3 + Math.floor(Math.random() * 20),
+      status: 'open', resolution: null,
+      closesAt: now + 5 * 24 * HOUR, resolvesBy: now + 6 * 24 * HOUR,
+      createdAt: now - 3 * HOUR, oracleRef: null, heat: Math.random() * 100,
+    }, { merge: true });
+    await db.doc(`discovery/disc_${m.id}`).set({
+      itemId: `disc_${m.id}`, kind: 'market', refId: m.id, title: m.q,
+      subtitle: `${m.yes}¢ YES`, imageUrl: null, priceYesCents: m.yes, poolTotal: null,
+      heat: Math.random() * 100, createdAt: now - 2 * HOUR,
+    }, { merge: true });
+  }
+  // a couple of big-win discovery items
+  await db.doc('discovery/disc_bigwin1').set({
+    itemId: 'disc_bigwin1', kind: 'big_win', refId: 'bet_10k', title: 'Dave just won big!',
+    subtitle: 'Won 4,200 Chips on a head-to-head', actorName: 'Dave Kim', actorPhotoURL: null,
+    amount: 4200, heat: 90, createdAt: now - 30 * 60 * 1000,
+  }, { merge: true });
+
+  console.log(`✓ Seeded ${DEMO.length} users, ${BETS.length} bets, 1 season, ${FIXTURES.length} fixtures, ${MARKETS.length} markets.`);
   console.log('  Demo login (Auth emulator): alextan@example.com / chipd123');
   process.exit(0);
 }

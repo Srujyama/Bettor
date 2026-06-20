@@ -53,6 +53,9 @@ export { createBracket, advanceBracket } from './callables/bracket';
 export { challengeFriend } from './callables/challengeFriend';
 export { settleSquares } from './settlement/settleSquares';
 
+// ── Casino mini-games (Casino track) ─────────────────────────────────────────
+export { playGame } from './callables/playGame';
+
 // ── Settlement engine (admin/system callable) ───────────────────────────────
 export { settleBet } from './settlement/settle';
 
@@ -84,3 +87,18 @@ export { rotateDailyMissions, rotateWeeklyMissions } from './scheduled/rotateMis
 
 // ── Bet formats sweeps (Formats track) ────────────────────────────────────────
 export { settleParlaysSweep } from './scheduled/settleParlaysSweep';
+
+// ── Hyper-engagement loops (Engagement track) ─────────────────────────────────
+export { claimHourlyDrop } from './callables/claimHourlyDrop';
+export { openChest } from './callables/openChest';
+export { dailySpin } from './callables/dailySpin';
+export { recordActivity } from './callables/recordActivity';
+
+// ── Prediction markets (Markets track) ────────────────────────────────────────
+export { createMarket } from './callables/createMarket';
+export { tradeMarket } from './callables/tradeMarket';
+export { resolveMarket } from './callables/resolveMarket';
+export { closeMarketsSweep, autoVoidMarketsSweep } from './scheduled/marketSweeps';
+
+// ── Discovery feed (Discovery track) ──────────────────────────────────────────
+export { buildDiscovery } from './scheduled/buildDiscovery';

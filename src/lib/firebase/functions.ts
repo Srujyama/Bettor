@@ -31,6 +31,18 @@ import {
   SendChatPayloadSchema,
   ChallengeFriendPayloadSchema,
 } from '@/shared/schemas-ext';
+import {
+  CreateMarketPayloadSchema,
+  TradeMarketPayloadSchema,
+  ResolveMarketPayloadSchema,
+  PlayGamePayloadSchema,
+  ClaimHourlyDropPayloadSchema,
+  OpenChestPayloadSchema,
+  DailySpinPayloadSchema,
+  type CreateMarketPayload,
+  type TradeMarketPayload,
+  type PlayGamePayload,
+} from '@/shared/schemas-markets';
 
 function callable<TReq, TRes>(name: string) {
   const fn = httpsCallable<TReq, TRes>(functions, name);
@@ -276,4 +288,82 @@ const _giftIntoBet = callable<unknown, CallableResult & { betId: string; recipie
 export async function giftIntoBet(input: { betId: string; recipientUid: string; amount: number }) {
   const payload = GiftIntoBetPayloadSchema.parse(input);
   return _giftIntoBet(payload);
+}
+
+// ─── Mega-feature callables (markets / casino / engagement) ──────────────────
+// Owned by the Casino track: ALL new `fns.*` wrappers across the mega tracks are
+// added here in one pass. Each validates with the shared zod payload from
+// `@/shared/schemas-markets` and calls the same-named callable. Other tracks
+// ASSUME these exist by name.
+
+// ── Prediction markets (Markets track callables) ──
+const _createMarket = callable<CreateMarketPayload, CallableResult & { marketId: string }>('createMarket');
+export async function createMarket(input: CreateMarketPayload) {
+  const payload = CreateMarketPayloadSchema.parse(input);
+  return _createMarket(payload);
+}
+
+const _tradeMarket = callable<
+  TradeMarketPayload,
+  CallableResult & { shares: number; cost: number; priceCents: number; newBalance: number }
+>('tradeMarket');
+export async function tradeMarket(input: TradeMarketPayload) {
+  const payload = TradeMarketPayloadSchema.parse(input);
+  return _tradeMarket(payload);
+}
+
+const _resolveMarket = callable<unknown, CallableResult & { marketId: string; resolution: 'yes' | 'no' }>('resolveMarket');
+export async function resolveMarket(input: { marketId: string; resolution: 'yes' | 'no' }) {
+  const payload = ResolveMarketPayloadSchema.parse(input);
+  return _resolveMarket(payload);
+}
+
+// ── Casino mini-games (one callable for all five games) ──
+export interface PlayGameResult {
+  ok: boolean;
+  roundId: string;
+  game: PlayGamePayload['game'];
+  stake: number;
+  multiplier: number;
+  payout: number;
+  net: number;
+  serverSeed: string;
+  serverSeedHash: string;
+  clientSeed: string;
+  nonce: number;
+  result: Record<string, unknown>;
+  newBalance: number;
+  replayed?: boolean;
+}
+const _playGame = callable<PlayGamePayload, PlayGameResult>('playGame');
+export async function playGame(input: PlayGamePayload) {
+  const payload = PlayGamePayloadSchema.parse(input);
+  return _playGame(payload);
+}
+
+// ── Engagement loops (Engagement track callables) ──
+const _claimHourlyDrop = callable<
+  unknown,
+  CallableResult & { granted: number; streak: number; nextClaimAt: number }
+>('claimHourlyDrop');
+export async function claimHourlyDrop() {
+  return _claimHourlyDrop(ClaimHourlyDropPayloadSchema.parse({}));
+}
+
+const _openChest = callable<
+  unknown,
+  CallableResult & { tier: string; chips: number }
+>('openChest');
+export async function openChest(input: { idempotencyKey: string }) {
+  const payload = OpenChestPayloadSchema.parse(input);
+  return _openChest(payload);
+}
+
+const _dailySpin = callable<
+  unknown,
+  CallableResult & { prize: number; segmentIndex: number; nextSpinAt: number }
+>('dailySpin');
+export async function dailySpin(input: { clientSeed: string }) {
+  const payload = DailySpinPayloadSchema.parse(input);
+  return _dailySpin(payload);
 }

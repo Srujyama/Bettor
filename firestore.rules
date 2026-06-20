@@ -69,6 +69,13 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly(['displayName', 'photoURL', 'settings', 'locale']);
     }
+    // CF-write-only user-doc fields. `engagement` (hourly/daily-spin/streak state)
+    // joins the existing forbidden set (equipped / pro / powerups / xp / stat
+    // counters): it is NOT in onlyProfileFields(), so the allow-LIST already blocks
+    // it, and this explicit guard documents + double-locks it as defense-in-depth.
+    function noEngagementWrite() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['engagement']);
+    }
     // True if the caller is a member of the given crew (group).
     function isCrewMember(groupId) {
       return ok()
@@ -81,8 +88,8 @@ service cloud.firestore {
       allow read: if ok();
       // Creation is server-only (onUserCreate). Never client-created.
       allow create: if false;
-      // Owners may patch ONLY their profile whitelist — never money/stats/compliance.
-      allow update: if isUser(uid) && onlyProfileFields();
+      // Owners may patch ONLY their profile whitelist — never money/stats/compliance/engagement.
+      allow update: if isUser(uid) && onlyProfileFields() && noEngagementWrite();
       allow delete: if false;
 
       // Subcollections.
@@ -131,6 +138,13 @@ service cloud.firestore {
       }
       match /wrapped/{periodId} {
         // Personal "wrapped" recap — owner reads; generateWrapped CF writes.
+        allow read: if isUser(uid);
+        allow write: if false;
+      }
+
+      // ── casino game rounds (provably-fair; CF-write only) ────────────────────
+      match /gameRounds/{roundId} {
+        // Owner reads their own round history; playGame CF is the only writer.
         allow read: if isUser(uid);
         allow write: if false;
       }
@@ -302,6 +316,36 @@ service cloud.firestore {
         resource.data.uidA == request.auth.uid ||
         resource.data.uidB == request.auth.uid
       );
+      allow write: if false;
+    }
+
+    // ── prediction markets (LMSR AMM; created/traded via CFs) ───────────────────
+    match /markets/{marketId} {
+      // Public read (markets are a discovery surface). All AMM state, prices,
+      // volume, status and resolution are CF-written (createMarket / tradeMarket /
+      // resolveMarket) — clients can NEVER write money/odds.
+      allow read: if ok();
+      allow write: if false;
+
+      // ── positions (per-trader holdings + P/L) ────────────────────────────────
+      match /positions/{positionUid} {
+        // Public read for the holders/leaderboard view; tradeMarket CF writes.
+        allow read: if ok();
+        allow write: if false;
+      }
+
+      // ── trades (immutable AMM fills) ─────────────────────────────────────────
+      match /trades/{tradeId} {
+        // Public tape; tradeMarket CF appends. Never client-writable.
+        allow read: if ok();
+        allow write: if false;
+      }
+    }
+
+    // ── discovery feed (denormalized; CF/scheduled-write only) ──────────────────
+    match /discovery/{itemId} {
+      // Read by all signed-in users — the TikTok-style discovery pager.
+      allow read: if ok();
       allow write: if false;
     }
 
