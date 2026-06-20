@@ -147,6 +147,18 @@ export const LEDGER_REASON = {
   PRO_SUBSCRIPTION: 'pro_subscription', // debit for a Pro period (Chips, cosmetic-tier)
   GIFT_SENT: 'gift_sent', // debit: co-bet contribution on a friend's behalf (inside a bet)
   GIFT_RECEIVED: 'gift_received', // credit counterpart
+  // ── markets (Kalshi-style yes/no prediction markets, Chips only) ──
+  MARKET_BUY: 'market_buy', // debit: buying YES/NO shares
+  MARKET_SELL: 'market_sell', // credit: selling shares back to the AMM
+  MARKET_PAYOUT: 'market_payout', // credit: winning shares pay 100 Chips each at resolve
+  MARKET_REFUND: 'market_refund', // credit: shares refunded on a voided market
+  // ── casino mini-games (provably fair, house-edge, Chips only) ──
+  GAME_WAGER: 'game_wager', // debit: stake into a casino mini-game
+  GAME_PAYOUT: 'game_payout', // credit: mini-game win
+  // ── engagement loops ──
+  HOURLY_DROP: 'hourly_drop', // credit: claimed an hourly chip drop
+  CHEST_REWARD: 'chest_reward', // credit: opened a variable-reward chest
+  SPIN_REWARD: 'spin_reward', // credit: daily free spin reward
 } as const;
 export type LedgerReason = (typeof LEDGER_REASON)[keyof typeof LEDGER_REASON];
 
