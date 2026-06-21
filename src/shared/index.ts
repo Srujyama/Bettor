@@ -9,5 +9,6 @@ export * from './formats';
 export * from './markets';
 export * from './casino';
 export * from './engagement';
+export * from './geo';
 export * from './schemas-markets';
 export * from './ids';

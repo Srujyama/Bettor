@@ -110,6 +110,8 @@ export const BET_VISIBILITY = {
   FRIENDS: 'friends',
   INVITE_ONLY: 'invite_only',
   GROUP: 'group',
+  /** Discoverable by anyone physically near the bet's location (radius-based). */
+  LOCAL: 'local',
 } as const;
 export type BetVisibility = (typeof BET_VISIBILITY)[keyof typeof BET_VISIBILITY];
 

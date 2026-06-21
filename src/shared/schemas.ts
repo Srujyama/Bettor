@@ -152,6 +152,16 @@ export const BetSchema = z.object({
   idempotencyKey: z.string().optional(),
   shareCode: z.string(),
   tags: z.array(z.string()).default([]),
+  // ── Location ("in your area" bets) ──
+  // When isLocal, the bet is discoverable by anyone within radiusMeters of its
+  // (privacy-fuzzed) coordinates. lat/lng are already coarsened server-side; the
+  // geohash is for cheap radius queries; placeName is a coarse neighborhood label.
+  isLocal: z.boolean().default(false),
+  lat: z.number().min(-90).max(90).nullable().optional(),
+  lng: z.number().min(-180).max(180).nullable().optional(),
+  geohash: z.string().nullable().optional(),
+  placeName: z.string().nullable().optional(),
+  radiusMeters: z.number().int().positive().nullable().optional(),
   // Denormalized creator card.
   creatorName: z.string().optional(),
   creatorPhotoURL: z.string().nullable().optional(),
@@ -354,6 +364,14 @@ export const CreateBetPayloadSchema = z.object({
   resolveBy: epochMillis,
   mediaPath: z.string().nullable().optional(),
   tags: z.array(z.string()).optional(),
+  // Location ("in your area"): the client sends its coarse position + a place
+  // label; the server re-fuzzes + geohashes before storing. radiusMeters caps
+  // who can discover it. Only used when the bet is made local.
+  isLocal: z.boolean().optional(),
+  lat: z.number().min(-90).max(90).optional(),
+  lng: z.number().min(-180).max(180).optional(),
+  placeName: z.string().max(80).nullable().optional(),
+  radiusMeters: z.number().int().positive().max(200_000).optional(),
   idempotencyKey: z.string(),
 });
 export type CreateBetPayload = z.infer<typeof CreateBetPayloadSchema>;
