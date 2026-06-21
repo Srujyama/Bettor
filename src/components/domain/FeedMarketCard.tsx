@@ -41,12 +41,12 @@ export function FeedMarketCard({ market, onOpen, onQuickTrade }: Props) {
         <Txt variant="caption" muted className="uppercase tracking-widest">
           Prediction market
         </Txt>
-        <Txt variant="display" numberOfLines={5} className="mt-2">
+        <Txt variant="display" numberOfLines={3} adjustsFontSizeToFit className="mt-2">
           {market.question}
         </Txt>
 
         {/* Live price split */}
-        <View className="mt-8 gap-2">
+        <View className="mt-6 gap-2">
           <View className="h-3 flex-row overflow-hidden rounded-pill">
             <View style={{ flex: yesCents, backgroundColor: colors.jade }} />
             <View style={{ flex: noCents, backgroundColor: colors.coral }} />

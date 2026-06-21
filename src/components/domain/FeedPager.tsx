@@ -30,6 +30,8 @@ interface Props {
   onEndReached?: () => void;
   /** Bottom inset so the last card clears the tab bar. */
   bottomInset?: number;
+  /** Top inset (notch / Dynamic Island) so card content starts below it. */
+  topInset?: number;
   onOpenMarket: (marketId: string) => void;
   onOpenBet: (betId: string) => void;
   onQuickTrade: (market: Market, side: MarketSide) => void;
@@ -44,6 +46,7 @@ export function FeedPager({
   onRefresh,
   onEndReached,
   bottomInset = 0,
+  topInset = 0,
   onOpenMarket,
   onOpenBet,
   onQuickTrade,
@@ -52,7 +55,10 @@ export function FeedPager({
   onGetInWin,
 }: Props) {
   const { height } = useWindowDimensions();
-  const pageHeight = Math.max(1, height - bottomInset);
+  // Each page fills the space BETWEEN the notch and the tab bar, and the list is
+  // padded down by the top inset, so card content never hides under the Dynamic
+  // Island and snapping stays aligned to the visible viewport.
+  const pageHeight = Math.max(1, height - topInset - bottomInset);
 
   const renderItem = useCallback(
     ({ item }: ListRenderItemInfo<FeedEntry>) => (
@@ -80,9 +86,10 @@ export function FeedPager({
       decelerationRate="fast"
       disableIntervalMomentum
       showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingTop: topInset }}
       getItemLayout={(_data, index) => ({
         length: pageHeight,
-        offset: pageHeight * index,
+        offset: pageHeight * index + topInset,
         index,
       })}
       onEndReachedThreshold={0.5}

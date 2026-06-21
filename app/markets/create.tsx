@@ -5,7 +5,7 @@
  * the server picks the LMSR depth and writes the market. Money is read-only here.
  */
 import { useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Button, ChipCounter, Input, Screen, Txt } from '@/components/ui';
 import { useCreateMarket } from '@/features/markets/hooks';
@@ -70,6 +70,10 @@ export default function CreateMarketScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: 'New market' }} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16, paddingBottom: 64, gap: 16 }}
@@ -172,6 +176,7 @@ export default function CreateMarketScreen() {
           Markets settle in Chips. Chips have no cash value.
         </Txt>
       </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

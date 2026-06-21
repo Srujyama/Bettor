@@ -7,7 +7,7 @@
  * only reads server state (useMarket / useMarketPosition / live trades).
  */
 import { useMemo } from 'react';
-import { ScrollView, View, useWindowDimensions } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View, useWindowDimensions } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { orderBy, limit as fbLimit } from 'firebase/firestore';
 import { Button, Card, ChipCounter, Pill, Screen, Txt } from '@/components/ui';
@@ -103,6 +103,11 @@ export default function MarketDetailScreen() {
   return (
     <Screen edges={['bottom']}>
       <Stack.Screen options={{ title: m.category }} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 16 }}>
         <View className="gap-2">
           <View className="flex-row items-center justify-between">
@@ -239,6 +244,7 @@ export default function MarketDetailScreen() {
           onPress={() => router.push('/markets/positions')}
         />
       </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }

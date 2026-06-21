@@ -39,6 +39,8 @@ import type { MarketSide } from '@/shared/markets';
 
 /** Height the bottom tab bar occupies (mirror of (tabs)/_layout). */
 const TAB_BAR_HEIGHT = 84;
+/** Height the floating "Hot now" trending rail occupies at the top of the feed. */
+const TRENDING_RAIL_HEIGHT = 64;
 
 /**
  * Cross-track routes (`/markets/[id]`, `/casino`) are owned by the Markets and
@@ -167,6 +169,9 @@ export default function HotScreen() {
         refreshing={refreshing}
         onRefresh={onRefresh}
         bottomInset={TAB_BAR_HEIGHT}
+        // Push card content below the notch AND the floating trending rail so the
+        // rail never overlaps a card's header.
+        topInset={insets.top + (trending && trending.length ? TRENDING_RAIL_HEIGHT : 0)}
         onOpenMarket={openMarket}
         onOpenBet={openBet}
         onQuickTrade={onQuickTrade}

@@ -37,7 +37,7 @@ export function FeedBetCard({ bet, heat = 0, onOpen, onQuickJoin }: Props) {
         <Txt variant="caption" muted className="uppercase tracking-widest">
           {bet.category}
         </Txt>
-        <Txt variant="display" numberOfLines={5} className="mt-2">
+        <Txt variant="display" numberOfLines={3} adjustsFontSizeToFit className="mt-2">
           {bet.title}
         </Txt>
 
