@@ -57,6 +57,8 @@ export default ({ config }: ConfigContext): ExpoConfig & { newArchEnabled?: bool
         'Chipd lets you attach images from your library to bets and your profile.',
       NSFaceIDUsageDescription:
         'Chipd can ask for Face ID before you place a stake, as a responsible-play safeguard.',
+      NSLocationWhenInUseUsageDescription:
+        'Chipd uses your location to show bets happening near you and to tag bets you post to your area. Your exact location is never shown to others — only an approximate neighborhood.',
     },
   },
   android: {
@@ -68,7 +70,7 @@ export default ({ config }: ConfigContext): ExpoConfig & { newArchEnabled?: bool
       monochromeImage: './assets/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
-    permissions: ['USE_BIOMETRIC', 'USE_FINGERPRINT'],
+    permissions: ['USE_BIOMETRIC', 'USE_FINGERPRINT', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION'],
   },
   web: {
     favicon: './assets/favicon.png',
@@ -86,6 +88,13 @@ export default ({ config }: ConfigContext): ExpoConfig & { newArchEnabled?: bool
     ],
     'expo-secure-store',
     'expo-localization',
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission:
+          'Chipd uses your location to show bets near you and tag bets you post to your area. Others only ever see an approximate neighborhood, never your exact spot.',
+      },
+    ],
     [
       'expo-image-picker',
       {

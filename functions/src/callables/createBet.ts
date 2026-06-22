@@ -11,6 +11,7 @@ import { now } from '../lib/time';
 import { callableOpts, requireAuth, assertUserAllowed, toHttpsError } from '../lib/guards';
 import { CreateBetPayloadSchema } from '../shared/schemas';
 import { makeId, makeShareCode } from '../shared/ids';
+import { encodeGeohash, fuzzLocation, isValidLatLng } from '../shared/geo';
 import {
   BET_CATEGORY,
   BET_STATUS,
@@ -20,6 +21,10 @@ import {
   RESOLUTION_MODE,
   STAKE,
 } from '../shared/constants';
+
+/** Default discovery radius for a local bet (5 km), bounded to a sane max. */
+const DEFAULT_LOCAL_RADIUS_M = 5_000;
+const MAX_LOCAL_RADIUS_M = 200_000;
 
 export const createBet = onCall(callableOpts, async (req) => {
   try {
@@ -86,6 +91,24 @@ export const createBet = onCall(callableOpts, async (req) => {
 
       const resolutionMode = payload.resolutionMode ?? RESOLUTION_MODE.CREATOR;
 
+      // ── Location ("in your area") — server-trusted. We re-fuzz the client's
+      // coarse coordinate to a ~600m grid (privacy) and geohash it for radius
+      // queries. A bet is only local if it has a valid coordinate.
+      const wantsLocal =
+        payload.isLocal === true || payload.visibility === BET_VISIBILITY.LOCAL;
+      const rawPoint =
+        payload.lat != null && payload.lng != null ? { lat: payload.lat, lng: payload.lng } : null;
+      const local = wantsLocal && isValidLatLng(rawPoint);
+      const fuzzed = local ? fuzzLocation(rawPoint!) : null;
+      const geohash = fuzzed ? encodeGeohash(fuzzed, 9) : null;
+      const radiusMeters = local
+        ? Math.min(MAX_LOCAL_RADIUS_M, payload.radiusMeters ?? DEFAULT_LOCAL_RADIUS_M)
+        : null;
+      // If a bet is local, its visibility is LOCAL so the rules/feeds treat it so.
+      const visibility = local
+        ? BET_VISIBILITY.LOCAL
+        : payload.visibility ?? BET_VISIBILITY.FRIENDS;
+
       const bet = {
         betId,
         creatorUid: uid,
@@ -102,7 +125,7 @@ export const createBet = onCall(callableOpts, async (req) => {
         maxStake,
         currency: 'CHIP',
         rakeBps: ECONOMY.RAKE_BPS,
-        visibility: payload.visibility ?? BET_VISIBILITY.FRIENDS,
+        visibility,
         groupId: payload.groupId ?? null,
         status: BET_STATUS.OPEN,
         resolutionMode,
@@ -125,6 +148,13 @@ export const createBet = onCall(callableOpts, async (req) => {
         idempotencyKey: payload.idempotencyKey,
         shareCode,
         tags: payload.tags ?? [],
+        // Location fields (null unless this is a local bet).
+        isLocal: local,
+        lat: fuzzed?.lat ?? null,
+        lng: fuzzed?.lng ?? null,
+        geohash,
+        placeName: local ? payload.placeName ?? null : null,
+        radiusMeters,
         creatorName: (user.displayName as string) ?? 'Player',
         creatorPhotoURL: (user.photoURL as string | null) ?? null,
       };

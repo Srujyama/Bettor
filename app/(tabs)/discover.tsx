@@ -55,15 +55,31 @@ export default function DiscoverScreen() {
       <View className="gap-3 px-4 pt-1">
         <View className="flex-row items-center justify-between">
           <Txt variant="title">Discover</Txt>
-          <Pressable
-            onPress={openSearch}
-            hitSlop={12}
-            accessibilityRole="button"
-            accessibilityLabel="Search"
-            className="h-9 w-9 items-center justify-center rounded-full bg-surface-raised"
-          >
-            <Txt style={{ fontSize: 16 }}>🔍</Txt>
-          </Pressable>
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/nearby');
+              }}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Bets near you"
+              className="h-9 flex-row items-center gap-1 rounded-pill border border-jade/40 bg-jade/10 px-3"
+            >
+              <Txt variant="label" className="text-jade">
+                📍 Near you
+              </Txt>
+            </Pressable>
+            <Pressable
+              onPress={openSearch}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Search"
+              className="h-9 w-9 items-center justify-center rounded-full bg-surface-raised"
+            >
+              <Txt style={{ fontSize: 16 }}>🔍</Txt>
+            </Pressable>
+          </View>
         </View>
         <Input
           placeholder="Search bets, people, tags…"

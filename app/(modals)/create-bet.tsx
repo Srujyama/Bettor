@@ -37,6 +37,8 @@ import {
 } from '@/shared/constants';
 import { makeIdempotencyKey, makeId } from '@/shared/ids';
 import { formatChips } from '@/shared/money';
+import { DEFAULT_RADIUS_M, RADIUS_PRESETS } from '@/shared/geo';
+import { useNearbyLocation } from '@/features/location/hooks';
 import type { CreateBetPayload } from '@/shared/schemas';
 
 const STEPS = ['Basics', 'Type', 'Stakes', 'Timing', 'Review'] as const;
@@ -122,6 +124,11 @@ export default function CreateBetModal() {
   const [maxStake, setMaxStake] = useState(String(STAKE.DEFAULT_MAX));
   const [visibility, setVisibility] = useState<BetVisibility>(BET_VISIBILITY.FRIENDS);
   const [resolutionMode, setResolutionMode] = useState<ResolutionMode>(RESOLUTION_MODE.CREATOR);
+
+  // Local ("in your area") — opt-in toggle in the Stakes step.
+  const [isLocal, setIsLocal] = useState(false);
+  const [localRadius, setLocalRadius] = useState(DEFAULT_RADIUS_M);
+  const nearby = useNearbyLocation();
 
   // Step 4 — timing (epoch millis)
   const [lockAt, setLockAt] = useState(() => Date.now() + 24 * HOUR);
@@ -217,6 +224,17 @@ export default function CreateBetModal() {
       lockAt,
       resolveBy,
       mediaPath,
+      // Location: only attach a coordinate when local + we actually have one.
+      ...(isLocal && nearby.position
+        ? {
+            isLocal: true,
+            lat: nearby.position.lat,
+            lng: nearby.position.lng,
+            placeName: nearby.placeName,
+            radiusMeters: localRadius,
+            visibility: BET_VISIBILITY.LOCAL,
+          }
+        : {}),
       idempotencyKey: makeIdempotencyKey(),
     };
 
@@ -306,6 +324,11 @@ export default function CreateBetModal() {
             resolutionMode={resolutionMode}
             setResolutionMode={setResolutionMode}
             marketModel={marketModel}
+            isLocal={isLocal}
+            setIsLocal={setIsLocal}
+            localRadius={localRadius}
+            setLocalRadius={setLocalRadius}
+            nearby={nearby}
           />
         ) : null}
 
@@ -573,6 +596,11 @@ function StakesStep(props: {
   resolutionMode: ResolutionMode;
   setResolutionMode: (v: ResolutionMode) => void;
   marketModel: string;
+  isLocal: boolean;
+  setIsLocal: (v: boolean) => void;
+  localRadius: number;
+  setLocalRadius: (v: number) => void;
+  nearby: ReturnType<typeof useNearbyLocation>;
 }) {
   return (
     <View className="gap-5">
@@ -659,6 +687,74 @@ function StakesStep(props: {
           })}
         </View>
       </View>
+
+      {/* ── Local ("in your area") ── */}
+      <Card className="gap-3">
+        <Pressable
+          onPress={async () => {
+            const next = !props.isLocal;
+            if (next && !props.nearby.position) {
+              const ok = await props.nearby.enableGps();
+              if (!ok) {
+                // Permission denied / no fix — don't flip on without a location.
+                return;
+              }
+            }
+            props.setIsLocal(next);
+          }}
+          className="flex-row items-center justify-between"
+        >
+          <View className="flex-1 pr-3">
+            <Txt variant="label">📍 Make it a local bet</Txt>
+            <Txt variant="caption" muted className="mt-1">
+              Anyone nearby can discover and join it. Your exact spot is never shown — just an
+              approximate area.
+            </Txt>
+          </View>
+          <View
+            className={`h-7 w-12 justify-center rounded-pill px-1 ${
+              props.isLocal ? 'bg-jade' : 'bg-surface-raised border border-hairline'
+            }`}
+          >
+            <View
+              className={`h-5 w-5 rounded-full bg-ink ${props.isLocal ? 'self-end' : 'self-start'}`}
+            />
+          </View>
+        </Pressable>
+
+        {props.isLocal ? (
+          <View className="gap-2 border-t border-hairline pt-3">
+            <Txt variant="caption" muted>
+              {props.nearby.loading
+                ? 'Getting your location…'
+                : props.nearby.position
+                  ? `Posting near ${props.nearby.placeName ?? 'your area'}`
+                  : 'Location unavailable — tap the toggle to enable.'}
+            </Txt>
+            <Txt variant="caption" dim>
+              Discovery radius
+            </Txt>
+            <View className="flex-row flex-wrap gap-2">
+              {RADIUS_PRESETS.map((r) => {
+                const active = props.localRadius === r.meters;
+                return (
+                  <Pressable
+                    key={r.meters}
+                    onPress={() => props.setLocalRadius(r.meters)}
+                    className={`rounded-pill border px-3 py-2 ${
+                      active ? 'border-jade/60 bg-jade/15' : 'border-hairline bg-surface-raised'
+                    }`}
+                  >
+                    <Txt variant="label" className={active ? 'text-jade' : 'text-text-dim'}>
+                      {r.label}
+                    </Txt>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
+      </Card>
 
       <View className="gap-2">
         <Txt variant="label" dim>

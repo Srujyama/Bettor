@@ -93,3 +93,6 @@ export { DailySpinDial } from './DailySpinDial';
 export { NearMissPulse } from './NearMissPulse';
 export { FomoBadge } from './FomoBadge';
 export { RewardChest } from './RewardChest';
+
+// ── Location ("in your area")
+export { DistancePill } from './DistancePill';
