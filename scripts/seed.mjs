@@ -22,6 +22,34 @@ const auth = getAuth();
 const now = Date.now();
 const HOUR = 3600_000;
 
+// ── Inline geo helpers (mirror src/shared/geo.ts so seeded local bets are
+//    queryable by the same geohash logic the app uses) ──
+const EARTH_R = 6_371_000;
+const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+function fuzzGrid(lat, lng, gridMeters = 600) {
+  const latStep = (gridMeters / EARTH_R) * (180 / Math.PI);
+  const lngStep = latStep / Math.max(0.01, Math.cos((lat * Math.PI) / 180));
+  return {
+    lat: +(Math.round(lat / latStep) * latStep).toFixed(5),
+    lng: +(Math.round(lng / lngStep) * lngStep).toFixed(5),
+  };
+}
+function geohash9(lat, lng, precision = 9) {
+  let latMin = -90, latMax = 90, lngMin = -180, lngMax = 180, hash = '', bit = 0, ch = 0, even = true;
+  while (hash.length < precision) {
+    if (even) {
+      const mid = (lngMin + lngMax) / 2;
+      if (lng >= mid) { ch |= 1 << (4 - bit); lngMin = mid; } else lngMax = mid;
+    } else {
+      const mid = (latMin + latMax) / 2;
+      if (lat >= mid) { ch |= 1 << (4 - bit); latMin = mid; } else latMax = mid;
+    }
+    even = !even;
+    if (bit < 4) bit++; else { hash += BASE32[ch]; bit = 0; ch = 0; }
+  }
+  return hash;
+}
+
 const DEMO = [
   { uid: 'demo_alex', name: 'Alex Tan', handle: 'alextan', balance: 1850, won: 4, lost: 2 },
   { uid: 'demo_mia', name: 'Mia Costa', handle: 'miacosta', balance: 980, won: 2, lost: 3 },
@@ -242,7 +270,32 @@ async function main() {
     amount: 4200, heat: 90, createdAt: now - 30 * 60 * 1000,
   }, { merge: true });
 
-  console.log(`✓ Seeded ${DEMO.length} users, ${BETS.length} bets, 1 season, ${FIXTURES.length} fixtures, ${MARKETS.length} markets.`);
+  // ── Local ("in your area") bets around Macau, with geohashes ──
+  const LOCAL_BETS = [
+    { id: 'loc_market', title: 'Will the Taipa night market be packed tonight?', lat: 22.1554, lng: 113.5616, place: 'Taipa, Macau' },
+    { id: 'loc_rain', title: 'Will it rain on the Senado Square crowd this evening?', lat: 22.1936, lng: 113.5390, place: 'Macau Peninsula' },
+    { id: 'loc_queue', title: 'Will the wait at the pork chop bun place be over 20 min?', lat: 22.1487, lng: 113.5610, place: 'Coloane' },
+    { id: 'loc_ferry', title: 'Will the 7pm HK ferry leave on time?', lat: 22.2070, lng: 113.5290, place: 'Outer Harbour' },
+  ];
+  for (const lb of LOCAL_BETS) {
+    const fuzzed = fuzzGrid(lb.lat, lb.lng);
+    await db.doc(`bets/${lb.id}`).set({
+      betId: lb.id, creatorUid: DEMO[1].uid, creatorName: DEMO[1].name, creatorPhotoURL: null,
+      title: lb.title, description: '', category: 'social', type: 'binary',
+      outcomes: [{ id: 'yes', label: 'Yes' }, { id: 'no', label: 'No' }],
+      marketModel: 'PARI_MUTUEL', stakeMode: 'open', minStake: 10, maxStake: 2000,
+      currency: 'CHIP', rakeBps: 0, visibility: 'local', groupId: null, status: 'open',
+      resolutionMode: 'creator', resolverUid: DEMO[1].uid,
+      lockAt: now + 12 * HOUR, resolveBy: now + 24 * HOUR, winningOutcomeId: null,
+      poolTotal: 200 + Math.floor(Math.random() * 1500), poolByOutcome: { yes: 150, no: 100 },
+      entryCount: 2 + Math.floor(Math.random() * 8), createdAt: now - 1 * HOUR,
+      shareCode: lb.id.slice(-6).toUpperCase(), tags: [],
+      isLocal: true, lat: fuzzed.lat, lng: fuzzed.lng, geohash: geohash9(fuzzed.lat, fuzzed.lng),
+      placeName: lb.place, radiusMeters: 5000,
+    }, { merge: true });
+  }
+
+  console.log(`✓ Seeded ${DEMO.length} users, ${BETS.length} bets, 1 season, ${FIXTURES.length} fixtures, ${MARKETS.length} markets, ${LOCAL_BETS.length} local bets.`);
   console.log('  Demo login (Auth emulator): alextan@example.com / chipd123');
   process.exit(0);
 }
