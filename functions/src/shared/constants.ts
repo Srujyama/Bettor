@@ -161,6 +161,14 @@ export const LEDGER_REASON = {
   HOURLY_DROP: 'hourly_drop', // credit: claimed an hourly chip drop
   CHEST_REWARD: 'chest_reward', // credit: opened a variable-reward chest
   SPIN_REWARD: 'spin_reward', // credit: daily free spin reward
+  // ── fixed-odds peer betting (matched offers) ──
+  OFFER_ESCROW: 'offer_escrow', // debit: maker/taker locks their stake on a matched offer
+  OFFER_REFUND: 'offer_refund', // credit: unmatched offer cancelled / match voided
+  OFFER_PAYOUT: 'offer_payout', // credit: winner takes the matched pot
+  // ── card-game home-session tracker ──
+  SESSION_BUYIN: 'session_buyin', // debit: chips put on the table (Chips mode)
+  SESSION_CASHOUT: 'session_cashout', // credit: chips taken off the table at settle
+  SESSION_SETTLE: 'session_settle', // transfer leg when settling debts between players
 } as const;
 export type LedgerReason = (typeof LEDGER_REASON)[keyof typeof LEDGER_REASON];
 

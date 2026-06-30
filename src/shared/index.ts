@@ -10,5 +10,8 @@ export * from './markets';
 export * from './casino';
 export * from './engagement';
 export * from './geo';
+export * from './fixedodds';
+export * from './settleup';
 export * from './schemas-markets';
+export * from './schemas-cards';
 export * from './ids';
