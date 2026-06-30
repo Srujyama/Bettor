@@ -20,6 +20,7 @@ export default function BetStackLayout() {
       <Stack.Screen name="resolve" options={{ title: 'Resolve bet', presentation: 'modal' }} />
       <Stack.Screen name="dispute" options={{ title: 'Raise a dispute', presentation: 'modal' }} />
       <Stack.Screen name="participants" options={{ title: 'Participants' }} />
+      <Stack.Screen name="offers" options={{ title: 'Odds book' }} />
     </Stack>
   );
 }

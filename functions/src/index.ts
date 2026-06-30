@@ -102,3 +102,16 @@ export { closeMarketsSweep, autoVoidMarketsSweep } from './scheduled/marketSweep
 
 // ── Discovery feed (Discovery track) ──────────────────────────────────────────
 export { buildDiscovery } from './scheduled/buildDiscovery';
+
+// ── Fixed-odds peer betting ("I'll lay you 2:1") — Fixed-odds track ───────────
+export { createOffer } from './callables/createOffer';
+export { takeOffer } from './callables/takeOffer';
+export { cancelOffer } from './callables/cancelOffer';
+export { settleFixedOddsMatches } from './triggers/settleFixedOddsMatches';
+
+// ── Card-game home-session tracker (Card track) ───────────────────────────────
+export { createSession } from './callables/createSession';
+export { joinSession } from './callables/joinSession';
+export { sessionBuyIn } from './callables/sessionBuyIn';
+export { sessionCashout } from './callables/sessionCashout';
+export { settleSession } from './callables/settleSession';

@@ -217,6 +217,47 @@ service cloud.firestore {
         allow read: if ok();
         allow write: if false;
       }
+
+      // ── fixed-odds peer offers ("I'll lay you 2:1") ──────────────────────────
+      // A maker backs an outcome at decimal odds; takers lay the other side.
+      // Readable by any signed-in user on a readable bet; all stake/escrow/status
+      // fields are CF-written (createOffer / takeOffer / cancelOffer). Never
+      // client-writable.
+      match /offers/{offerId} {
+        allow read: if ok();
+        allow write: if false;
+      }
+
+      // ── fixed-odds matched pairs (fills) ─────────────────────────────────────
+      // One matched maker↔taker pair. Pot/odds/winner/settlement are CF-written
+      // (takeOffer creates; settleFixedOddsMatches settles). Never client-writable.
+      match /matches/{matchId} {
+        allow read: if ok();
+        allow write: if false;
+      }
+    }
+
+    // ── card-game home sessions (poker / blackjack ledger tracker) ──────────────
+    // A host opens a session; players buy in / cash out / settle up. ALL money
+    // fields (buyIn / cashOut / net / pot / transfers) and status are CF-written
+    // (createSession / joinSession / sessionBuyIn / sessionCashout / settleSession).
+    // For the pilot, sessions are readable by any signed-in user (invite/link gates
+    // joining); tighten to members later.
+    match /cardSessions/{sessionId} {
+      allow read: if ok();
+      allow write: if false;
+
+      // Per-player ledger (docId == player uid or a guest id).
+      match /players/{playerId} {
+        allow read: if ok();
+        allow write: if false;
+      }
+
+      // Immutable buy-in / rebuy / cash-out transactions.
+      match /txns/{txnId} {
+        allow read: if ok();
+        allow write: if false;
+      }
     }
 
     // ── groups ───────────────────────────────────────────────────────────────

@@ -244,6 +244,13 @@ export default function BetDetailScreen() {
           ))}
         </View>
 
+        {/* Fixed-odds peer market entry point */}
+        <Button
+          label="⚖️ Odds book — lay your own odds"
+          tone="royal"
+          onPress={() => router.push(`/bet/${bet.betId}/offers`)}
+        />
+
         {/* Primary action / position */}
         {isOpen && !myEntry ? (
           <Button label="Join this bet" tone="jade" size="lg" onPress={() => goPlace()} />

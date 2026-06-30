@@ -43,6 +43,19 @@ import {
   type TradeMarketPayload,
   type PlayGamePayload,
 } from '@/shared/schemas-markets';
+import {
+  CreateOfferPayloadSchema,
+  TakeOfferPayloadSchema,
+  CancelOfferPayloadSchema,
+  CreateSessionPayloadSchema,
+  JoinSessionPayloadSchema,
+  SessionBuyInPayloadSchema,
+  SessionCashoutPayloadSchema,
+  SettleSessionPayloadSchema,
+  type CreateOfferPayload,
+  type TakeOfferPayload,
+  type CreateSessionPayload,
+} from '@/shared/schemas-cards';
 
 function callable<TReq, TRes>(name: string) {
   const fn = httpsCallable<TReq, TRes>(functions, name);
@@ -366,4 +379,93 @@ const _dailySpin = callable<
 export async function dailySpin(input: { clientSeed: string }) {
   const payload = DailySpinPayloadSchema.parse(input);
   return _dailySpin(payload);
+}
+
+// ─── Fixed-odds peer betting + card-session tracker (Fixed-odds track owns these
+//     wrappers for BOTH tracks, per CARDS_SPEC). Each validates with its shared
+//     zod payload and calls the same-named callable. ───
+
+// ── Fixed-odds peer offers ("I'll lay you 2:1") ──
+const _createOffer = callable<
+  CreateOfferPayload,
+  CallableResult & { offerId: string; betId: string; newBalance: number }
+>('createOffer');
+export async function createOffer(input: CreateOfferPayload) {
+  const payload = CreateOfferPayloadSchema.parse(input);
+  return _createOffer(payload);
+}
+
+const _takeOffer = callable<
+  TakeOfferPayload,
+  CallableResult & {
+    matchId: string;
+    backerStakeMatched: number;
+    layerRisk: number;
+    pot: number;
+    remainingStake: number;
+    newBalance: number;
+  }
+>('takeOffer');
+export async function takeOffer(input: TakeOfferPayload) {
+  const payload = TakeOfferPayloadSchema.parse(input);
+  return _takeOffer(payload);
+}
+
+const _cancelOffer = callable<
+  z.infer<typeof CancelOfferPayloadSchema>,
+  CallableResult & { offerId: string; refunded: number; newBalance: number }
+>('cancelOffer');
+export async function cancelOffer(input: { betId: string; offerId: string }) {
+  const payload = CancelOfferPayloadSchema.parse(input);
+  return _cancelOffer(payload);
+}
+
+// ── Card-game home sessions (Card track callables) ──
+const _createSession = callable<
+  CreateSessionPayload,
+  CallableResult & { sessionId: string }
+>('createSession');
+export async function createSession(input: CreateSessionPayload) {
+  const payload = CreateSessionPayloadSchema.parse(input);
+  return _createSession(payload);
+}
+
+const _joinSession = callable<
+  z.infer<typeof JoinSessionPayloadSchema>,
+  CallableResult & { sessionId: string; uid: string }
+>('joinSession');
+export async function joinSession(input: z.infer<typeof JoinSessionPayloadSchema>) {
+  const payload = JoinSessionPayloadSchema.parse(input);
+  return _joinSession(payload);
+}
+
+const _sessionBuyIn = callable<
+  z.infer<typeof SessionBuyInPayloadSchema>,
+  CallableResult & { sessionId: string; uid: string; buyIn: number; newBalance: number }
+>('sessionBuyIn');
+export async function sessionBuyIn(input: z.infer<typeof SessionBuyInPayloadSchema>) {
+  const payload = SessionBuyInPayloadSchema.parse(input);
+  return _sessionBuyIn(payload);
+}
+
+const _sessionCashout = callable<
+  z.infer<typeof SessionCashoutPayloadSchema>,
+  CallableResult & { sessionId: string; uid: string; cashOut: number; net: number }
+>('sessionCashout');
+export async function sessionCashout(input: z.infer<typeof SessionCashoutPayloadSchema>) {
+  const payload = SessionCashoutPayloadSchema.parse(input);
+  return _sessionCashout(payload);
+}
+
+const _settleSession = callable<
+  z.infer<typeof SettleSessionPayloadSchema>,
+  CallableResult & {
+    sessionId: string;
+    transfers: { from: string; to: string; amount: number }[];
+    balanced: boolean;
+  }
+>('settleSession');
+export async function settleSession(input: { sessionId: string }) {
+  const payload = SettleSessionPayloadSchema.parse(input);
+  return _settleSession(payload);
 }

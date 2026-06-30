@@ -26,6 +26,7 @@ const ITEMS: HubItem[] = [
   { key: 'missions', icon: '🎯', title: 'Missions', subtitle: 'Daily & weekly goals', href: '/missions', tint: colors.jade },
   { key: 'achievements', icon: '🏅', title: 'Achievements', subtitle: 'Unlock badges as you play', href: '/achievements', tint: colors.royal },
   { key: 'play', icon: '🃏', title: 'Game Formats', subtitle: 'Parlays, brackets & squares', href: '/play/formats', tint: colors.coral },
+  { key: 'cards', icon: '🃏', title: 'Card games', subtitle: 'Track a poker night & settle up', href: '/cards', tint: colors.jade },
   { key: 'sports', icon: '🏟️', title: 'Sports', subtitle: 'Browse fixtures & live games', href: '/sports', tint: colors.jade },
   { key: 'shop', icon: '🛍️', title: 'Shop', subtitle: 'Cosmetics, power-ups & Pro', href: '/shop', tint: colors.gold },
 ];

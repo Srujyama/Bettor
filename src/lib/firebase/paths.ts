@@ -78,6 +78,21 @@ export const paths = {
   // Discovery feed
   discovery: () => `discovery`,
   discoveryItem: (itemId: string) => `discovery/${itemId}`,
+
+  // ─── Fixed-odds peer offers + card sessions (Fixed-odds track owns these
+  //     builders for BOTH tracks, per CARDS_SPEC ownership). ───
+  // Fixed-odds offers/matches live under a bet.
+  offers: (betId: string) => `bets/${betId}/offers`,
+  offer: (betId: string, offerId: string) => `bets/${betId}/offers/${offerId}`,
+  matches: (betId: string) => `bets/${betId}/matches`,
+  match: (betId: string, matchId: string) => `bets/${betId}/matches/${matchId}`,
+  // Card-game home sessions (top-level), their players + txns.
+  cardSessions: () => `cardSessions`,
+  cardSession: (sessionId: string) => `cardSessions/${sessionId}`,
+  sessionPlayers: (sessionId: string) => `cardSessions/${sessionId}/players`,
+  sessionPlayer: (sessionId: string, uid: string) => `cardSessions/${sessionId}/players/${uid}`,
+  sessionTxns: (sessionId: string) => `cardSessions/${sessionId}/txns`,
+  sessionTxn: (sessionId: string, txnId: string) => `cardSessions/${sessionId}/txns/${txnId}`,
 } as const;
 
 /** Stable, order-independent rivalry pair id from two uids. */

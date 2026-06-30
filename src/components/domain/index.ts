@@ -96,3 +96,17 @@ export { RewardChest } from './RewardChest';
 
 // ── Location ("in your area")
 export { DistancePill } from './DistancePill';
+
+// ── Fixed-odds peer betting ("I'll lay you 2:1") — Fixed-odds track ──
+export { OfferRow } from './OfferRow';
+export { OddsStepper } from './OddsStepper';
+export { LayOddsTicket } from './LayOddsTicket';
+export { TakeOfferSheet } from './TakeOfferSheet';
+
+// ── Card-game home-session tracker (Card track) ──
+export { SessionCard } from './SessionCard';
+export { PlayerLedgerRow } from './PlayerLedgerRow';
+export { BuyInStepper } from './BuyInStepper';
+export { SettleUpRow } from './SettleUpRow';
+export { NetBadge } from './NetBadge';
+export { GameTypePill } from './GameTypePill';

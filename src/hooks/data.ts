@@ -39,6 +39,13 @@ import type {
   Market,
   MarketPosition,
 } from '@/shared/schemas-markets';
+import type {
+  CardSession,
+  FixedOddsMatch,
+  FixedOddsOffer,
+  SessionPlayer,
+  SessionTxn,
+} from '@/shared/schemas-cards';
 
 export function useCurrentUser() {
   const uid = useSession((s) => s.uid);
@@ -450,5 +457,89 @@ export function useDiscoveryFeed(max = 40) {
     paths.discovery(),
     [orderBy('createdAt', 'desc'), fbLimit(max)],
     true,
+  );
+}
+
+// ─── Fixed-odds offers/matches + card-game sessions read hooks ─────────────────
+// Owned by the Card track per CARDS_SPEC (this file is the single owner of read
+// hooks for BOTH new tracks). All reads are live (onSnapshot-backed). Money /
+// pot / net / transfers are CF-written; these only read. The `paths.offers/
+// matches/cardSessions/cardSession/sessionPlayers/sessionTxns` builders are added
+// by the Fixed-odds track (single owner of paths.ts) — referenced here by name.
+
+/**
+ * Card-game home sessions for the "your recent home games" list.
+ *
+ * PILOT NOTE: the only composite indexes provisioned for `cardSessions` are
+ * `(hostUid, createdAt)` and `(status, createdAt)` (per CARDS_SPEC). So the
+ * DEFAULT read lists the sessions you HOST, newest first — the common case for
+ * the pilot ("log a game I'm running"). A `memberUids` array is denormalized on
+ * each session (CF-maintained) so a "host or member" array-contains read can be
+ * added later once its index lands; we don't query it here to avoid a missing
+ * composite index. Pass `{ status }` to scope to a lifecycle (open/settled).
+ */
+export function useCardSessions(
+  filter: { status?: CardSession['status'] } = {},
+  max = 30,
+) {
+  const uid = useSession((s) => s.uid);
+  const constraints = [] as Parameters<typeof useCollectionQuery>[2];
+  if (filter.status) constraints.push(where('status', '==', filter.status));
+  else constraints.push(where('hostUid', '==', uid));
+  constraints.push(orderBy('createdAt', 'desc'), fbLimit(max));
+  return useCollectionQuery<CardSession>(
+    ['cardSessions', uid, filter.status ?? 'mine', max],
+    uid ? paths.cardSessions() : null,
+    constraints,
+    !!uid,
+  );
+}
+
+/** A single card session by id (live pot / status / transfers stream in). */
+export function useCardSession(id: string | null) {
+  return useDocQuery<CardSession>(
+    ['cardSession', id],
+    id ? paths.cardSession(id) : null,
+    !!id,
+  );
+}
+
+/** Players in a session (with running buy-in totals + cash-out + net), join order. */
+export function useSessionPlayers(id: string | null) {
+  return useCollectionQuery<SessionPlayer>(
+    ['cardSession', id, 'players'],
+    id ? paths.sessionPlayers(id) : null,
+    [orderBy('joinedAt', 'asc')],
+    !!id,
+  );
+}
+
+/** The buy-in / rebuy / cash-out ledger for a session, oldest first. */
+export function useSessionTxns(id: string | null, max = 200) {
+  return useCollectionQuery<SessionTxn>(
+    ['cardSession', id, 'txns', max],
+    id ? paths.sessionTxns(id) : null,
+    [orderBy('createdAt', 'asc'), fbLimit(max)],
+    !!id,
+  );
+}
+
+/** Open / partial fixed-odds offers on a bet (the "odds book"), newest first. */
+export function useOffers(betId: string | null) {
+  return useCollectionQuery<FixedOddsOffer>(
+    ['bet', betId, 'offers'],
+    betId ? paths.offers(betId) : null,
+    [orderBy('createdAt', 'desc')],
+    !!betId,
+  );
+}
+
+/** Matched fixed-odds pairs (fills) on a bet, newest first. */
+export function useMatches(betId: string | null) {
+  return useCollectionQuery<FixedOddsMatch>(
+    ['bet', betId, 'matches'],
+    betId ? paths.matches(betId) : null,
+    [orderBy('createdAt', 'desc')],
+    !!betId,
   );
 }
